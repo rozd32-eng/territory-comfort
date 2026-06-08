@@ -25,11 +25,11 @@
         select { padding: 10px; border: 1px solid #ddd; border-radius: 40px; background: white; }
         .stats-bar { background: white; padding: 10px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; }
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; position: relative; }
         .card:hover { transform: translateY(-3px); }
         .card-img { height: 180px; display: flex; align-items: center; justify-content: center; padding: 15px; background: #f7fafc; }
         .card-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .promo-badge { position: absolute; top: 10px; left: 10px; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; }
+        .promo-badge { position: absolute; top: 10px; left: 10px; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; z-index: 2; }
         .card-info { padding: 15px; }
         .vendor { color: #667eea; font-size: 12px; margin-bottom: 5px; }
         .title { font-size: 14px; font-weight: 600; margin-bottom: 8px; min-height: 40px; }
@@ -203,27 +203,38 @@
             let search=document.getElementById('searchInput').value.toLowerCase();
             let vendor=document.getElementById('vendorSelect').value, category=document.getElementById('categorySelect').value, sort=document.getElementById('sortSelect').value;
             itemsPerPage=parseInt(document.getElementById('limitSelect').value);
-            filtered=allProducts.filter(p=>{ if(vendor&&p.vendorId!==vendor) return false; if(category&&p.category!==category) return false; if(search&&!`${p.gname} ${p.code} ${p.vendor}`.toLowerCase().includes(search)) return false; return true; });
-            if(sort==='price-asc') filtered.sort((a,b)=>(a.sprice||0)-(b.sprice||0)); if(sort==='price-desc') filtered.sort((a,b)=>(b.sprice||0)-(a.sprice||0));
+            filtered=allProducts.filter(p=>{ if(vendor&&p.vendorId!==vendor) return false; if(category&&p.category!==category) return false; if(search&&!`${p.name||p.gname||''} ${p.code||''} ${p.vendor||''}`.toLowerCase().includes(search)) return false; return true; });
+            if(sort==='price-asc') filtered.sort((a,b)=>(a.price||a.sprice||0)-(b.price||b.sprice||0)); if(sort==='price-desc') filtered.sort((a,b)=>(b.price||b.sprice||0)-(a.price||a.sprice||0));
             currentPage=1; renderProducts(); document.getElementById('statsText').innerHTML=`📊 ${filtered.length} товарів знайдено`;
         }
         
         function renderProducts() {
             let start=(currentPage-1)*itemsPerPage, pageItems=filtered.slice(start,start+itemsPerPage), grid=document.getElementById('productsGrid');
             if(filtered.length===0) { grid.innerHTML='<div class="loading">😕 Товари не знайдено</div>'; document.getElementById('pagination').style.display='none'; return; }
-            grid.innerHTML=pageItems.map(p=>{ let stock=getStock(p), price=p.sprice||0, stockClass=stock>5?'stock-high':(stock>0?'stock-low':'stock-out'), stockText=stock>0?`${stock} шт`:'Немає', imgUrl=(p.pic&&p.pic!=='null')?p.pic:'https://via.placeholder.com/200x200?text=📷'; return `<div class="card"><div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div><div class="card-info"><div class="vendor">${p.vendor||''}</div><div class="title">${(p.gname||p.code||'').substring(0,60)}</div><div class="code">${p.code||''}</div><div><span class="price-current">${price.toFixed(2)}</span></div><div class="stock ${stockClass}">${stockText}</div><button class="add-btn" onclick="addToCart('${p.code}','${(p.gname||p.code||'').replace(/'/g,"\\'")}',${price})" ${stock===0?'disabled':''}>🛒 В кошик</button></div></div>`; }).join('');
+            grid.innerHTML=pageItems.map(p=>{ 
+                let stock=getStock(p), price=p.price||p.sprice||0, promo=p.promoRIC||p.promo, oldPrice=p.RRP_UAH||0, hasPromo=promo&&promo<price;
+                let stockClass=stock>5?'stock-high':(stock>0?'stock-low':'stock-out'), stockText=stock>0?`${stock} шт`:'Немає'; 
+                let imgUrl=(p.pic&&p.pic!=='null')?p.pic:'https://via.placeholder.com/200x200?text=📷'; 
+                let productName=p.name||p.gname||p.code||'Без назви';
+                return `<div class="card"><div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div><div class="card-info"><div class="vendor">${p.vendor||''}</div><div class="title">${productName.substring(0,60)}</div><div class="code">${p.code||''}</div><div>${hasPromo?`<span class="price-current">${promo.toFixed(2)}</span><span class="price-old">${price.toFixed(2)} ₴</span>`:`<span class="price-current">${price.toFixed(2)}</span>`}</div><div class="stock ${stockClass}">${stockText}</div><button class="add-btn" onclick="addToCart('${p.code}','${productName.replace(/'/g,"\\'")}',${price})" ${stock===0?'disabled':''}>🛒 В кошик</button></div></div>`; }).join('');
             let totalPages=Math.ceil(filtered.length/itemsPerPage); document.getElementById('pageInfo').innerHTML=`Сторінка ${currentPage} / ${totalPages||1}`; document.getElementById('prevPage').disabled=currentPage===1; document.getElementById('nextPage').disabled=currentPage===totalPages||totalPages===0; document.getElementById('pagination').style.display='flex';
         }
         function nextPage() { let total=Math.ceil(filtered.length/itemsPerPage); if(currentPage<total) { currentPage++; renderProducts(); window.scrollTo({top:0}); } }
         function prevPage() { if(currentPage>1) { currentPage--; renderProducts(); window.scrollTo({top:0}); } }
         
         async function loadProducts() {
-            try { let res=await fetch('erc_products.json'); if(!res.ok) throw new Error(`HTTP ${res.status}`); let data=await res.json(); allProducts=Array.isArray(data)?data:(data.goods||[]); console.log(`✅ ${allProducts.length} товарів`);
-                let vendors=new Map(), categories=new Set(); allProducts.forEach(p=>{ if(p.vendorId&&p.vendor) vendors.set(p.vendorId,p.vendor); if(p.category) categories.add(p.category); });
+            try { 
+                let res=await fetch('erc_products.json'); 
+                if(!res.ok) throw new Error(`HTTP ${res.status}`); 
+                let data=await res.json(); 
+                allProducts=Array.isArray(data)?data:(data.goods||[]); 
+                console.log(`✅ ${allProducts.length} товарів`);
+                let vendors=new Map(), categories=new Set(); 
+                allProducts.forEach(p=>{ if(p.vendorId&&p.vendor) vendors.set(p.vendorId,p.vendor); if(p.category) categories.add(p.category); });
                 document.getElementById('vendorSelect').innerHTML='<option value="">Всі вендори</option>'+Array.from(vendors.entries()).sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
                 document.getElementById('categorySelect').innerHTML='<option value="">Всі категорії</option>'+Array.from(categories).sort().map(c=>`<option value="${c}">${c}</option>`).join('');
                 applyFilters();
-            } catch(e) { console.error(e); document.getElementById('productsGrid').innerHTML=`<div class="loading">❌ Помилка: ${e.message}</div>`; }
+            } catch(e) { console.error(e); document.getElementById('productsGrid').innerHTML=`<div class="loading">❌ Помилка: ${e.message}<br>Перевірте файл erc_products.json</div>`; }
         }
         
         document.getElementById('searchInput').addEventListener('input',()=>setTimeout(applyFilters,300));
