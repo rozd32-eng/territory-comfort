@@ -1,154 +1,217 @@
 <!DOCTYPE html>
 <html lang="uk">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERC Shop - Адмін панель</title>
+    <title>Territory Comfort - Адмін панель</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #38bdf8;
-        }
-
-        .stat-label {
-            color: #94a3b8;
-            margin-top: 5px;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .chart-card {
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 20px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 10px 20px;
-            background: #1e293b;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            border-radius: 10px;
-        }
-
-        .tab-btn.active {
-            background: #38bdf8;
-            color: #fff;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #334155;
-        }
-
-        th {
-            background: #1e293b;
-            color: #38bdf8;
-        }
-
-        .search-query {
-            background: #1e293b;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 8px;
-        }
-
-        .export-btn {
-            background: #38bdf8;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin: 10px 0;
-        }
-
-        @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #1e293b; border-radius: 16px; padding: 20px; text-align: center; }
+        .stat-value { font-size: 32px; font-weight: 700; color: #38bdf8; }
+        .stat-label { color: #94a3b8; margin-top: 5px; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: #1e293b; border-radius: 16px; padding: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; background: #1e293b; border: none; color: #94a3b8; cursor: pointer; border-radius: 10px; transition: all 0.3s; }
+        .tab-btn.active { background: #38bdf8; color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #1e293b; color: #38bdf8; }
+        .list-item { background: #1e293b; padding: 12px 15px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .rank { font-weight: bold; color: #38bdf8; width: 40px; }
+        .name { flex: 2; }
+        .count { color: #48bb78; font-weight: bold; }
+        .export-btn { background: #38bdf8; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin: 10px 0; }
+        .refresh-btn { background: #48bb78; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-left: 10px; }
+        @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-chart-line"></i> Адмін панель ERC Shop</h1>
-            <
+            <h1><i class="fas fa-chart-line"></i> Адмін панель Territory Comfort</h1>
+            <div>
+                <button class="export-btn" onclick="exportAllData()"><i class="fas fa-download"></i> Експортувати всі дані (CSV)</button>
+                <button class="refresh-btn" onclick="loadAllStats()"><i class="fas fa-sync-alt"></i> Оновити</button>
+                <a href="index.html" style="color:#38bdf8; margin-left:15px;"><i class="fas fa-store"></i> На сайт</a>
+            </div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card"><div class="stat-value" id="totalProducts">-</div><div class="stat-label">Всього товарів</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalOrders">-</div><div class="stat-label">Замовлень</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalRevenue">-</div><div class="stat-label">Дохід (₴)</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalUsers">-</div><div class="stat-label">Користувачів</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalSearches">-</div><div class="stat-label">Пошукових запитів</div></div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-card"><canvas id="ordersChart"></canvas><p style="text-align:center; margin-top:10px;">📊 Динаміка замовлень</p></div>
+            <div class="chart-card"><canvas id="categoriesChart"></canvas><p style="text-align:center; margin-top:10px;">🏷 Популярні категорії</p></div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('popular')">⭐ Популярні категорії</button>
+            <button class="tab-btn" onclick="showTab('products')">🏆 Популярні товари</button>
+            <button class="tab-btn" onclick="showTab('searches')">🔍 Пошукові запити</button>
+            <button class="tab-btn" onclick="showTab('orders')">📦 Замовлення</button>
+            <button class="tab-btn" onclick="showTab('users')">👥 Користувачі</button>
+        </div>
+        
+        <div id="popularTab" class="tab-content active">
+            <h3>⭐ ТОП-10 найпопулярніших категорій</h3>
+            <div id="popularCategories"></div>
+        </div>
+        
+        <div id="productsTab" class="tab-content">
+            <h3>🏆 ТОП-20 найпопулярніших товарів</h3>
+            <div id="popularProducts"></div>
+        </div>
+        
+        <div id="searchesTab" class="tab-content">
+            <h3>🔍 Найпопулярніші пошукові запити</h3>
+            <div id="searchesList"></div>
+        </div>
+        
+        <div id="ordersTab" class="tab-content">
+            <button class="export-btn" onclick="exportOrders()"><i class="fas fa-download"></i> Експортувати замовлення (CSV)</button>
+            <div id="ordersList"></div>
+        </div>
+        
+        <div id="usersTab" class="tab-content">
+            <button class="export-btn" onclick="exportUsers()"><i class="fas fa-download"></i> Експортувати користувачів (CSV)</button>
+            <div id="usersList"></div>
+        </div>
+    </div>
+    
+    <script>
+        let allProducts = [];
+        let orders = JSON.parse(localStorage.getItem('territory_orders') || '[]');
+        let searches = JSON.parse(localStorage.getItem('territory_searches') || '[]');
+        let views = JSON.parse(localStorage.getItem('territory_views') || '{}');
+        let categoryViews = JSON.parse(localStorage.getItem('territory_category_views') || '{}');
+        let users = JSON.parse(localStorage.getItem('territory_users') || '[]');
+        
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if (tab === 'popular') { document.getElementById('popularTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'products') { document.getElementById('productsTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'searches') { document.getElementById('searchesTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'orders') { document.getElementById('ordersTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'users') { document.getElementById('usersTab').classList.add('active'); event.target.classList.add('active'); }
+        }
+        
+        async function loadAllStats() {
+            try {
+                const res = await fetch('erc_products.json');
+                const data = await res.json();
+                allProducts = Array.isArray(data) ? data : (data.goods || []);
+                document.getElementById('totalProducts').textContent = allProducts.length.toLocaleString();
+                
+                let totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total), 0);
+                document.getElementById('totalOrders').textContent = orders.length;
+                document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(0).toLocaleString();
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('totalSearches').textContent = searches.length;
+                
+                renderOrdersChart();
+                renderCategoriesChart();
+                renderPopularCategories();
+                renderPopularProducts();
+                renderSearches();
+                renderOrders();
+                renderUsers();
+            } catch(e) { console.error(e); }
+        }
+        
+        function renderOrdersChart() {
+            const last7Days = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate() - i); return d.toISOString().slice(0,10); }).reverse();
+            const ordersByDay = last7Days.map(day => orders.filter(o => o.date?.slice(0,10) === day).length);
+            new Chart(document.getElementById('ordersChart'), { 
+                type: 'line', 
+                data: { labels: last7Days, datasets: [{ label: 'Замовлення', data: ordersByDay, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', fill: true, tension: 0.3 }] }, 
+                options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } } } 
+            });
+        }
+        
+        function renderCategoriesChart() {
+            const topCats = Object.entries(categoryViews).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            new Chart(document.getElementById('categoriesChart'), { 
+                type: 'bar', 
+                data: { labels: topCats.map(c => c[0].substring(0, 20)), datasets: [{ label: 'Перегляди', data: topCats.map(c => c[1]), backgroundColor: '#38bdf8' }] }, 
+                options: { responsive: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { ticks: { color: '#fff' } }, x: { ticks: { color: '#fff', maxRotation: 45 } } } } 
+            });
+        }
+        
+        function renderPopularCategories() {
+            const sorted = Object.entries(categoryViews).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            if (sorted.length === 0) { document.getElementById('popularCategories').innerHTML = '<div class="list-item">📭 Немає даних про категорії</div>'; return; }
+            document.getElementById('popularCategories').innerHTML = sorted.map(([cat, count], idx) => `<div class="list-item"><span class="rank">${idx+1}.</span><span class="name"><strong>${cat}</strong></span><span class="count">👁 ${count} переглядів</span></div>`).join('');
+        }
+        
+        function renderPopularProducts() {
+            const productNames = {};
+            allProducts.forEach(p => { productNames[p.code] = p.name || p.gname || p.code; });
+            const sorted = Object.entries(views).sort((a,b) => b[1] - a[1]).slice(0, 20);
+            if (sorted.length === 0) { document.getElementById('popularProducts').innerHTML = '<div class="list-item">📭 Немає даних про товари</div>'; return; }
+            document.getElementById('popularProducts').innerHTML = sorted.map(([code, count], idx) => `<div class="list-item"><span class="rank">${idx+1}.</span><span class="name"><strong>${productNames[code] || code}</strong><br><small style="color:#94a3b8">Код: ${code}</small></span><span class="count">👁 ${count} переглядів</span></div>`).join('');
+        }
+        
+        function renderSearches() {
+            if (searches.length === 0) { document.getElementById('searchesList').innerHTML = '<div class="list-item">📭 Немає пошукових запитів</div>'; return; }
+            const grouped = searches.reduce((acc, s) => { acc[s.term] = (acc[s.term] || 0) + 1; return acc; }, {});
+            const sorted = Object.entries(grouped).sort((a,b) => b[1] - a[1]);
+            document.getElementById('searchesList').innerHTML = sorted.map(([term, count], idx) => `<div class="list-item"><span class="rank">${idx+1}.</span><span class="name"><strong>${term}</strong></span><span class="count">🔍 ${count} разів</span></div>`).join('');
+        }
+        
+        function renderOrders() {
+            if (orders.length === 0) { document.getElementById('ordersList').innerHTML = '<div class="list-item">📭 Немає замовлень</div>'; return; }
+            document.getElementById('ordersList').innerHTML = `<table><thead><tr><th>ID</th><th>Дата</th><th>Клієнт</th><th>Телефон</th><th>Місто</th><th>Сума</th><th>Товари</th></tr></thead><tbody>${orders.slice(0, 50).map(o => `<tr><td>${o.id}</td><td>${new Date(o.date).toLocaleString()}</td><td>${o.customer}</td><td>${o.phone}</td><td>${o.city || '—'}</td><td>${o.total} ₴</td><td>${o.items.map(i => `${i.name} x${i.qty}`).join(', ')}</td></tr>`).join('')}</tbody></table>`;
+        }
+        
+        function renderUsers() {
+            if (users.length === 0) { document.getElementById('usersList').innerHTML = '<div class="list-item">📭 Немає зареєстрованих користувачів</div>'; return; }
+            document.getElementById('usersList').innerHTML = `<table><thead><tr><th>#</th><th>ПІБ</th><th>Email</th><th>Телефон</th><th>Місто</th><th>Адреса</th><th>Дата реєстрації</th></tr></thead><tbody>${users.map((u, idx) => `<tr><td>${idx+1}</td><td>${u.fullName || '—'}</td><td>${u.email}</td><td>${u.phone || '—'}</td><td>${u.city || '—'}</td><td>${u.address || '—'}</td><td>${new Date(u.registeredAt).toLocaleDateString()}</td></tr>`).join('')}</tbody></table>`;
+        }
+        
+        function exportOrders() {
+            if (orders.length === 0) { alert('Немає замовлень'); return; }
+            let csv = "ID,Дата,Клієнт,Телефон,Місто,Сума,Товари\n";
+            orders.forEach(o => { csv += `${o.id},${o.date},${o.customer},${o.phone},${o.city || ''},${o.total},"${o.items.map(i => `${i.name} x${i.qty}`).join('; ')}"\n`; });
+            downloadCSV(csv, `orders_${new Date().toISOString().slice(0,19)}.csv`);
+        }
+        
+        function exportUsers() {
+            if (users.length === 0) { alert('Немає користувачів'); return; }
+            let csv = "ПІБ,Email,Телефон,Місто,Адреса,Дата реєстрації\n";
+            users.forEach(u => { csv += `"${u.fullName || ''}",${u.email},"${u.phone || ''}","${u.city || ''}","${u.address || ''}",${u.registeredAt}\n`; });
+            downloadCSV(csv, `users_${new Date().toISOString().slice(0,19)}.csv`);
+        }
+        
+        function exportAllData() {
+            const allData = { orders, users, searches, views, categoryViews, productsCount: allProducts.length };
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `territory_comfort_export_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(url);
+            alert('✅ Всі дані експортовано в JSON');
+        }
+        
+        function downloadCSV(csv, filename) {
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+        }
+        
+        loadAllStats();
+    </script>
+</body>
+</html>
