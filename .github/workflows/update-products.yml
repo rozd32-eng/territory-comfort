@@ -18,7 +18,7 @@ jobs:
           python-version: '3.11'
       
       - name: Install dependencies
-        run: pip install requests python-dotenv
+        run: pip install requests
       
       - name: Run sync script
         run: python sync_erc.py
