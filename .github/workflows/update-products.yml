@@ -5,31 +5,44 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
+# Надаємо дозвіл на запис у репозиторій
+permissions:
+  contents: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+        with:
+          # Важливо: отримуємо історію комітів для коректного push
+          fetch-depth: 0
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: pip install requests
-      
+
       - name: Run sync script
         run: python sync_erc.py
         env:
           ERC_EMAIL: ${{ secrets.ERC_EMAIL }}
           ERC_PASSWORD: ${{ secrets.ERC_PASSWORD }}
-      
+
       - name: Commit and push if changed
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add erc_products.json
-          git diff --staged --quiet || git commit -m "Автоматичне оновлення товарів [skip ci]"
-          git push
+          # Перевіряємо, чи змінився файл
+          if [ -n "$(git status --porcelain erc_products.json)" ]; then
+            echo "Файл erc_products.json змінено. Оновлюємо репозиторій..."
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add erc_products.json
+            git commit -m "Автоматичне оновлення товарів [skip ci]"
+            git push
+          else
+            echo "Файл erc_products.json не змінено. Пропускаємо коміт."
+          fi
