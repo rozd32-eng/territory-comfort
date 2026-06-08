@@ -33,7 +33,7 @@
         .search-box { flex: 2; min-width: 200px; position: relative; }
         .search-box input { width: 100%; padding: 10px 40px 10px 15px; border: 1px solid #ddd; border-radius: 40px; }
         .voice-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; }
-        select { padding: 10px; border: 1px solid #ddd; border-radius: 40px; background: white; }
+        select { padding: 10px; border: 1px solid #ddd; border-radius: 40px; background: white; cursor: pointer; }
         .stats-bar { background: white; padding: 10px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; }
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; position: relative; }
@@ -110,18 +110,15 @@
     <footer><div class="footer-contacts"><a href="#">📞 +38 (073) 044-5800</a><a href="#">📞 +38 (098) 044-5800</a><a href="#">📍 Київ</a><a href="#">📦 Доставка</a><a href="#">💳 Оплата</a><a href="#">📧 Контакти</a></div><p>© 2025 Territory Comfort | Дані оновлюються автоматично</p></footer>
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
-    <!-- Auth Modal (розширена реєстрація) -->
     <div id="authModal" class="auth-modal">
         <div class="auth-content">
             <button onclick="closeAuthModal()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
             <h3 id="authTitle">Вхід</h3>
             <div id="authError" style="color:red;font-size:12px;margin-bottom:10px"></div>
-            
             <div id="loginFields">
                 <input type="email" id="loginEmail" placeholder="Email">
                 <input type="password" id="loginPassword" placeholder="Пароль">
             </div>
-            
             <div id="registerFields" style="display:none;">
                 <input type="text" id="regFullName" placeholder="ПІБ">
                 <input type="email" id="regEmail" placeholder="Email">
@@ -131,13 +128,11 @@
                 <input type="password" id="regPassword" placeholder="Пароль">
                 <input type="password" id="regConfirmPassword" placeholder="Підтвердіть пароль">
             </div>
-            
             <button id="authSubmitBtn" onclick="handleAuth()">Увійти</button>
             <div id="authSwitch" class="auth-switch" onclick="toggleAuthMode()">Немає акаунту? Зареєструватися</div>
         </div>
     </div>
 
-    <!-- Cart Modal -->
     <div id="cartModal" class="cart-modal">
         <div class="cart-content">
             <button onclick="closeCart()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
@@ -161,14 +156,9 @@
     </div>
 
     <script>
-        // ========== GOOGLE ANALYTICS ==========
-        function gtag_report(){dataLayer.push(arguments);}
-        
-        // ========== КОНФІГУРАЦІЯ TELEGRAM ==========
         const TELEGRAM_BOT_TOKEN = '8620493037:AAEhpB19nqTnqLe68ndlV9TPTnEgBq1FZQc';
         const TELEGRAM_CHAT_ID = '506201498';
         
-        // ========== АВТОРИЗАЦІЯ ==========
         let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
         let users = JSON.parse(localStorage.getItem('territory_users') || '[]');
         let authMode = 'login';
@@ -188,8 +178,8 @@
             cart = getUserCart();
             updateCartUI();
             updateAuthUI();
-            showToast('👋 Ви вийшли з акаунту');
-            gtag('event', 'logout', { event_category: 'user', event_label: 'logout' });
+            showToast('👋 Ви вийшли');
+            gtag('event', 'logout', { event_category: 'user' });
         }
         
         function getUserCart() { return currentUser ? JSON.parse(localStorage.getItem(`territory_cart_${currentUser.email}`) || '{}') : {}; }
@@ -206,15 +196,6 @@
             document.getElementById('authModal').style.display='flex';
             setAuthMode('login');
             document.getElementById('authError').innerHTML = '';
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('regFullName').value = '';
-            document.getElementById('regEmail').value = '';
-            document.getElementById('regPhone').value = '';
-            document.getElementById('regCity').value = '';
-            document.getElementById('regAddress').value = '';
-            document.getElementById('regPassword').value = '';
-            document.getElementById('regConfirmPassword').value = '';
         }
         function closeAuthModal() { document.getElementById('authModal').style.display='none'; }
         
@@ -225,7 +206,6 @@
             const switchDiv = document.getElementById('authSwitch');
             const loginFields = document.getElementById('loginFields');
             const registerFields = document.getElementById('registerFields');
-            
             if (mode === 'login') {
                 title.innerText = 'Вхід';
                 submitBtn.innerText = 'Увійти';
@@ -253,7 +233,6 @@
                 const password = document.getElementById('regPassword').value;
                 const confirmPassword = document.getElementById('regConfirmPassword').value;
                 const errorDiv = document.getElementById('authError');
-                
                 if (!fullName || !email || !phone || !city || !address || !password) {
                     errorDiv.innerText = 'Заповніть всі поля';
                     return;
@@ -263,10 +242,9 @@
                     return;
                 }
                 if (users.find(u => u.email === email)) {
-                    errorDiv.innerText = 'Користувач з таким email вже існує';
+                    errorDiv.innerText = 'Користувач вже існує';
                     return;
                 }
-                
                 const newUser = { fullName, email, phone, city, address, password, registeredAt: new Date().toISOString() };
                 users.push(newUser);
                 localStorage.setItem('territory_users', JSON.stringify(users));
@@ -276,14 +254,13 @@
                 cart = {};
                 updateCartUI();
                 updateAuthUI();
-                showToast(`✅ Вітаємо, ${fullName}! Реєстрація успішна!`);
+                showToast(`✅ Вітаємо, ${fullName}!`);
                 gtag('event', 'sign_up', { event_category: 'user', event_label: email });
                 closeAuthModal();
             } else {
                 const email = document.getElementById('loginEmail').value.trim();
                 const password = document.getElementById('loginPassword').value;
                 const errorDiv = document.getElementById('authError');
-                
                 if (!email || !password) {
                     errorDiv.innerText = 'Заповніть всі поля';
                     return;
@@ -298,7 +275,7 @@
                 cart = getUserCart();
                 updateCartUI();
                 updateAuthUI();
-                showToast(`👋 Ласкаво просимо, ${user.fullName || user.email.split('@')[0]}!`);
+                showToast(`👋 Ласкаво просимо!`);
                 gtag('event', 'login', { event_category: 'user', event_label: email });
                 closeAuthModal();
             }
@@ -306,7 +283,6 @@
         
         function getStock(p) { let w=p.whs?.find(w=>w.id===1); return w?parseInt(String(w.q).replace(/[^0-9]/g,''))||0:0; }
         
-        // ========== СТАТИСТИКА КАТЕГОРІЙ ==========
         function trackCategoryView(category) {
             if (!category) return;
             let categoryViews = JSON.parse(localStorage.getItem('territory_category_views') || '{}');
@@ -314,10 +290,15 @@
             localStorage.setItem('territory_category_views', JSON.stringify(categoryViews));
         }
         
+        function trackProductView(code) {
+            let views = JSON.parse(localStorage.getItem('territory_views') || '{}');
+            views[code] = (views[code] || 0) + 1;
+            localStorage.setItem('territory_views', JSON.stringify(views));
+        }
+        
         async function sendTelegramNotification(order) {
             const itemsList = order.items.map(i => `• ${i.name} x${i.qty} = ${(i.price*i.qty).toFixed(2)} ₴`).join('\n');
-            const customerInfo = `👤 ${order.customer}\n📞 ${order.phone}\n📍 ${order.city || 'не вибрано'}\n🏠 ${order.address || 'не вказано'}`;
-            const message = `🛒 **НОВЕ ЗАМОВЛЕННЯ!**\n\n${customerInfo}\n💰 ${order.total} ₴\n📦 ${order.items.reduce((s,i)=>s+i.qty,0)} шт\n\n📋 **Деталі:**\n${itemsList}`;
+            const message = `🛒 **НОВЕ ЗАМОВЛЕННЯ!**\n\n👤 ${order.customer}\n📞 ${order.phone}\n💰 ${order.total} ₴\n📦 ${order.items.reduce((s,i)=>s+i.qty,0)} шт\n\n📋 **Деталі:**\n${itemsList}`;
             try { await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message,parse_mode:'Markdown'})}); } catch(e){}
         }
         
@@ -361,7 +342,7 @@
             let customer = currentUser.fullName || currentUser.email.split('@')[0];
             let phone = currentUser.phone || prompt('Телефон:', '+380') || '+380';
             let city = document.getElementById('citySelect')?.value || currentUser.city || '';
-            let address = currentUser.address || prompt('Адреса доставки:', '') || '';
+            let address = currentUser.address || prompt('Адреса:', '') || '';
             let subtotal=Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0);
             let cityCost={'Київ':0,'Львів':20,'Одеса':25,'Дніпро':15,'Харків':20};
             let delivery=city?50+Object.values(cart).reduce((s,i)=>s+0.5*i.qty,0)*10+(cityCost[city]||30):0;
@@ -370,7 +351,7 @@
             let orders=JSON.parse(localStorage.getItem('territory_orders')||'[]'); orders.unshift(order); if(orders.length>100) orders.pop(); localStorage.setItem('territory_orders',JSON.stringify(orders));
             sendTelegramNotification(order);
             showToast(`✅ Замовлення на ${total.toFixed(2)} ₴ прийнято!`);
-            gtag('event', 'purchase', { event_category: 'ecommerce', value: total, currency: 'UAH' });
+            gtag('event', 'purchase', { event_category: 'ecommerce', value: total });
             clearCart(); closeCart();
         }
         
@@ -386,7 +367,6 @@
             itemsPerPage=parseInt(document.getElementById('limitSelect').value);
             filtered=allProducts.filter(p=>{ if(vendor&&p.vendorId!==vendor) return false; if(category&&p.category!==category) return false; if(search&&!`${p.name||p.gname||''} ${p.code||''} ${p.vendor||''}`.toLowerCase().includes(search)) return false; return true; });
             
-            // Сортування
             if(sort==='price-asc') filtered.sort((a,b)=>(a.price||a.sprice||0)-(b.price||b.sprice||0));
             else if(sort==='price-desc') filtered.sort((a,b)=>(b.price||b.sprice||0)-(a.price||a.sprice||0));
             else if(sort==='name-asc') filtered.sort((a,b)=>(a.name||a.gname||'').localeCompare(b.name||b.gname||'', 'uk'));
@@ -399,12 +379,13 @@
             if(search && search.length>2) gtag('event', 'search', { event_category: 'search', event_label: search });
         }
         
-        // Збір переглядів товарів
-        function trackProductView(code) {
-            let views = JSON.parse(localStorage.getItem('territory_views') || '{}');
-            views[code] = (views[code] || 0) + 1;
-            localStorage.setItem('territory_views', JSON.stringify(views));
-        }
-        
         function renderProducts() {
-            let start=(currentPage-1)*itemsPerPage, pageItems=filtered.slice(start,start+itemsPerPage), grid=document.getElementById('
+            let start=(currentPage-1)*itemsPerPage, pageItems=filtered.slice(start,start+itemsPerPage), grid=document.getElementById('productsGrid');
+            if(filtered.length===0) { grid.innerHTML='<div class="loading">😕 Товари не знайдено</div>'; document.getElementById('pagination').style.display='none'; return; }
+            grid.innerHTML=pageItems.map(p=>{ 
+                let stock=getStock(p), price=p.price||p.sprice||0, promo=p.promoRIC||p.promo, oldPrice=p.RRP_UAH||0, hasPromo=promo&&promo<price;
+                let stockClass=stock>5?'stock-high':(stock>0?'stock-low':'stock-out'), stockText=stock>0?`${stock} шт`:'Немає';
+                let imgUrl=(p.pic&&p.pic!=='null')?p.pic:'https://via.placeholder.com/200x200?text=📷';
+                let productName=p.name||p.gname||p.code||'Без назви';
+                trackCategoryView(p.category);
+                return `<div class="card" onclick="trackProductView('${p.code}'); window.location.href='product.html?code=${p.code}'"><div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div><div class="card-info"><
