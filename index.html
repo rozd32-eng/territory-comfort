@@ -92,7 +92,13 @@
         <div class="search-box"><input type="text" id="searchInput" placeholder="Пошук товарів..."><button class="voice-btn" onclick="startVoiceSearch()">🎤</button></div>
         <select id="vendorSelect"><option value="">Всі вендори</option></select>
         <select id="categorySelect"><option value="">Всі категорії</option></select>
-        <select id="sortSelect"><option value="default">За замовчуванням</option><option value="price-asc">Ціна ↑</option><option value="price-desc">Ціна ↓</option></select>
+        <select id="sortSelect">
+            <option value="default">За замовчуванням</option>
+            <option value="price-asc">Ціна ↑</option>
+            <option value="price-desc">Ціна ↓</option>
+            <option value="name-asc">Назва А-Я</option>
+            <option value="popularity-desc">⭐ За популярністю</option>
+        </select>
         <select id="limitSelect"><option value="24">24</option><option value="48">48</option><option value="96">96</option></select>
     </div>
 
@@ -300,6 +306,14 @@
         
         function getStock(p) { let w=p.whs?.find(w=>w.id===1); return w?parseInt(String(w.q).replace(/[^0-9]/g,''))||0:0; }
         
+        // ========== СТАТИСТИКА КАТЕГОРІЙ ==========
+        function trackCategoryView(category) {
+            if (!category) return;
+            let categoryViews = JSON.parse(localStorage.getItem('territory_category_views') || '{}');
+            categoryViews[category] = (categoryViews[category] || 0) + 1;
+            localStorage.setItem('territory_category_views', JSON.stringify(categoryViews));
+        }
+        
         async function sendTelegramNotification(order) {
             const itemsList = order.items.map(i => `• ${i.name} x${i.qty} = ${(i.price*i.qty).toFixed(2)} ₴`).join('\n');
             const customerInfo = `👤 ${order.customer}\n📞 ${order.phone}\n📍 ${order.city || 'не вибрано'}\n🏠 ${order.address || 'не вказано'}`;
@@ -371,17 +385,26 @@
             let vendor=document.getElementById('vendorSelect').value, category=document.getElementById('categorySelect').value, sort=document.getElementById('sortSelect').value;
             itemsPerPage=parseInt(document.getElementById('limitSelect').value);
             filtered=allProducts.filter(p=>{ if(vendor&&p.vendorId!==vendor) return false; if(category&&p.category!==category) return false; if(search&&!`${p.name||p.gname||''} ${p.code||''} ${p.vendor||''}`.toLowerCase().includes(search)) return false; return true; });
-            if(sort==='price-asc') filtered.sort((a,b)=>(a.price||a.sprice||0)-(b.price||b.sprice||0)); if(sort==='price-desc') filtered.sort((a,b)=>(b.price||b.sprice||0)-(a.price||a.sprice||0));
+            
+            // Сортування
+            if(sort==='price-asc') filtered.sort((a,b)=>(a.price||a.sprice||0)-(b.price||b.sprice||0));
+            else if(sort==='price-desc') filtered.sort((a,b)=>(b.price||b.sprice||0)-(a.price||a.sprice||0));
+            else if(sort==='name-asc') filtered.sort((a,b)=>(a.name||a.gname||'').localeCompare(b.name||b.gname||'', 'uk'));
+            else if(sort==='popularity-desc') {
+                let views = JSON.parse(localStorage.getItem('territory_views') || '{}');
+                filtered.sort((a,b) => (views[b.code] || 0) - (views[a.code] || 0));
+            }
+            
             currentPage=1; renderProducts(); document.getElementById('statsText').innerHTML=`📊 ${filtered.length} товарів знайдено`;
             if(search && search.length>2) gtag('event', 'search', { event_category: 'search', event_label: search });
         }
         
+        // Збір переглядів товарів
+        function trackProductView(code) {
+            let views = JSON.parse(localStorage.getItem('territory_views') || '{}');
+            views[code] = (views[code] || 0) + 1;
+            localStorage.setItem('territory_views', JSON.stringify(views));
+        }
+        
         function renderProducts() {
-            let start=(currentPage-1)*itemsPerPage, pageItems=filtered.slice(start,start+itemsPerPage), grid=document.getElementById('productsGrid');
-            if(filtered.length===0) { grid.innerHTML='<div class="loading">😕 Товари не знайдено</div>'; document.getElementById('pagination').style.display='none'; return; }
-            grid.innerHTML=pageItems.map(p=>{ 
-                let stock=getStock(p), price=p.price||p.sprice||0, promo=p.promoRIC||p.promo, oldPrice=p.RRP_UAH||0, hasPromo=promo&&promo<price;
-                let stockClass=stock>5?'stock-high':(stock>0?'stock-low':'stock-out'), stockText=stock>0?`${stock} шт`:'Немає'; 
-                let imgUrl=(p.pic&&p.pic!=='null')?p.pic:'https://via.placeholder.com/200x200?text=📷'; 
-                let productName=p.name||p.gname||p.code||'Без назви';
-                return `<div class="card"><div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div><div class="card-info"><div class="vendor">${p.vendor||''}</div><div class="title">${productName.substring(0,60)}</div><div class="code">${p.code||''}</div><div>${hasPromo?`<span class="price-current">${promo.toFixed(2)}</span><span class="price-old">${price.toFixed(2)}
+            let start=(currentPage-1)*itemsPerPage, pageItems=filtered.slice(start,start+itemsPerPage), grid=document.getElementById('
