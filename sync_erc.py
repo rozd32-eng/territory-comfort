@@ -2,15 +2,15 @@ import requests
 import json
 import os
 from datetime import datetime
-from dotenv import load_dotenv
 
-load_dotenv()
-
-EMAIL = os.getenv('ERC_EMAIL')
-PASSWORD = os.getenv('ERC_PASSWORD')
-API_URL = 'https://connect.erc.ua/connectservice/api/specprice/DoExport'
+# Отримуємо дані з секретів GitHub Actions (або використовуємо значення за замовчуванням)
+EMAIL = os.environ.get('ERC_EMAIL', 'rozd32@gmail.com')
+PASSWORD = os.environ.get('ERC_PASSWORD', '159159')
+API_URL = "https://connect.erc.ua/connectservice/api/specprice/DoExport"
 
 def sync_data():
+    print(f"[{datetime.now()}] Запуск синхронізації...")
+    
     payload = {
         "Email": EMAIL,
         "Pass": PASSWORD,
@@ -20,9 +20,11 @@ def sync_data():
         "OnlyFree": 1
     }
     
-    print("🔄 Запит до API...")
     try:
+        print("📡 Надсилаю запит до API...")
         r = requests.post(API_URL, json=payload, timeout=60)
+        print(f"📊 HTTP статус: {r.status_code}")
+        
         if r.status_code == 200:
             data = r.json()
             
@@ -34,24 +36,22 @@ def sync_data():
                             if 'q' in wh and isinstance(wh['q'], str) and '>' in wh['q']:
                                 wh['q'] = wh['q'].replace('>', '')
             
-            # Зберігаємо
+            # Зберігаємо файл
             with open('erc_products.json', 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             
             count = len(data) if isinstance(data, list) else len(data.get('goods', []))
-            print(f"✅ Збережено {count} товарів")
-            
-            # Бекап
-            os.makedirs('backups', exist_ok=True)
-            backup_name = f"backups/erc_products_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            with open(backup_name, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            print(f"💾 Бекап: {backup_name}")
-            
+            print(f"✅ УСПІХ! Отримано {count} товарів")
+            return True
         else:
-            print(f"❌ HTTP {r.status_code}")
+            print(f"❌ HTTP помилка: {r.status_code}")
+            print(f"Відповідь сервера: {r.text[:200]}")
+            return False
+            
     except Exception as e:
-        print(f"❌ Помилка: {e}")
+        print(f"❌ КРИТИЧНА ПОМИЛКА: {e}")
+        return False
 
 if __name__ == "__main__":
-    sync_data()
+    success = sync_data()
+    exit(0 if success else 1)
