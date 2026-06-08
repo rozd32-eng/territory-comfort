@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>ERC Shop - Товар</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        .back {
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        img {
+            max-width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back">← Назад</a>
+    <div id="content">Завантаження...</div>
+    <script>
+        const code = new URLSearchParams(location.search).get('code');
+        let currentProduct = null;
+
+        fetch('erc_products.json')
+            .then(r => r.json())
+            .then(data => {
+                const products = Array.isArray(data) ? data : data.goods;
+                const product = products.find(p => p.code === code);
+                if (!product) {
+                    document.getElementById('content').innerHTML = '<p>Товар не знайдено</p>';
+                    return;
+                }
+                currentProduct = product;
+                document.getElementById('content').innerHTML = `
+                    <h1>${product.gname || product.code}</h1>
+                    <img src="${product.pic || ''}" onerror="this.style.display='none'">
+                    <p>Код: ${product.code}</p>
+                    <p>Ціна: ${product.sprice || 0} ₴</p>
+                    <p>Виробник: ${product.vendor || ''}</p>
+                    <button onclick="addToCart()">Купити</button>
+                `;
+            })
+            .catch(e => document.getElementById('content').innerHTML = '<p>Помилка завантаження</p>');
+
+        function addToCart() {
+            if (!currentProduct) return;
+            let cart = JSON.parse(localStorage.getItem('erc_cart') || '{}');
+            let price = parseFloat(currentProduct.sprice) || 0;
+            let name = (currentProduct.gname || currentProduct.code).substring(0, 40);
+            
+            if (cart[code]) {
+                cart[code].qty++;
+            } else {
+                cart[code] = {
+                    name: name,
+                    price: price,
+                    qty: 1
+                };
+            }
+            localStorage.setItem('erc_cart', JSON.stringify(cart));
+            alert('Додано!');
+        }
+    </script>
+</body>
+
+</html>
