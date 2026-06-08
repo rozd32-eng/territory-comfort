@@ -1,0 +1,35 @@
+name: Оновлення товарів
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+      
+      - name: Run sync script
+        run: python sync_erc.py
+        env:
+          ERC_EMAIL: ${{ secrets.ERC_EMAIL }}
+          ERC_PASSWORD: ${{ secrets.ERC_PASSWORD }}
+      
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add erc_products.json
+          git diff --staged --quiet || git commit -m "Автоматичне оновлення товарів [skip ci]"
+          git push
