@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Всі стилі такі ж, як у попередній версії */
         :root {
             --bg: #f5f7fa;
             --card: #ffffff;
@@ -36,7 +35,6 @@
         .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .theme-btn, .cart-btn, .auth-btn { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 40px; cursor: pointer; border: none; color: white; display: flex; align-items: center; gap: 8px; }
         .cart-count { background: #ff6b6b; border-radius: 20px; padding: 2px 8px; }
-        .user-name { font-size: 13px; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 40px; }
         .contacts-header { display: flex; gap: 15px; font-size: 14px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 40px; }
         .contacts-header i { margin-right: 5px; }
         
@@ -397,7 +395,7 @@
         }
         function startVoiceSearch() { if (recognition) recognition.start(); else alert('Голосовий пошук не підтримується'); }
         
-        // ========== ФІЛЬТРИ ==========
+        // ========== ФІЛЬТРИ ТА ВІДОБРАЖЕННЯ ==========
         let allProducts = [], filtered = [], currentPage = 1, itemsPerPage = 24;
         let searches = JSON.parse(localStorage.getItem('territory_searches') || '[]');
         
@@ -408,3 +406,34 @@
             let category = document.getElementById('categorySelect').value;
             let promoType = document.getElementById('promoSelect').value;
             let sort = document.getElementById('sortSelect').value;
+            itemsPerPage = parseInt(document.getElementById('limitSelect').value);
+            
+            filtered = allProducts.filter(p => {
+                if (vendor && p.vendorId !== vendor) return false;
+                if (category && p.category !== category) return false;
+                if (promoType === 'promo' && !isPromo(p)) return false;
+                if (promoType === 'stock' && getStock(p) <= 0) return false;
+                if (search && !`${p.gname} ${p.code} ${p.vendor}`.toLowerCase().includes(search)) return false;
+                return true;
+            });
+            
+            if (sort === 'price-asc') filtered.sort((a,b) => getPrice(a) - getPrice(b));
+            else if (sort === 'price-desc') filtered.sort((a,b) => getPrice(b) - getPrice(a));
+            else if (sort === 'name-asc') filtered.sort((a,b) => (a.gname || '').localeCompare(b.gname || '', 'uk'));
+            
+            currentPage = 1;
+            renderProducts();
+            updateStats();
+        }
+        
+        function renderProducts() {
+            let start = (currentPage-1) * itemsPerPage;
+            let pageItems = filtered.slice(start, start+itemsPerPage);
+            let grid = document.getElementById('productsGrid');
+            if (filtered.length === 0) { grid.innerHTML = '<div class="loading">😕 Товари не знайдено</div>'; document.getElementById('pagination').style.display = 'none'; return; }
+            
+            grid.innerHTML = pageItems.map(p => {
+                let stock = getStock(p), price = getPrice(p), promo = isPromo(p);
+                let stockClass = stock > 5 ? 'stock-high' : (stock > 0 ? 'stock-low' : 'stock-out');
+                let stockText = stock > 0 ? `${stock} шт` : 'Немає';
+                let imgUrl = (p.pic && p.pic !== 'null') ? p
