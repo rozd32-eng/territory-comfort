@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Всі стилі такі ж, як у попередній версії */
         :root {
             --bg: #f5f7fa;
             --card: #ffffff;
@@ -29,7 +30,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; transition: all 0.3s; }
         
-        /* Header */
         .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 25px; border-radius: 16px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .logo h1 { font-size: 24px; cursor: pointer; }
         .logo p { font-size: 11px; opacity: 0.8; }
@@ -40,7 +40,6 @@
         .contacts-header { display: flex; gap: 15px; font-size: 14px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 40px; }
         .contacts-header i { margin-right: 5px; }
         
-        /* Filters */
         .filters { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; border: 1px solid var(--border); }
         .search-box { flex: 2; min-width: 200px; position: relative; }
         .search-box input { width: 100%; padding: 12px 45px 12px 15px; border: 2px solid var(--border); border-radius: 40px; font-size: 14px; background: var(--bg); color: var(--text); }
@@ -51,7 +50,6 @@
         .right-controls { display: flex; gap: 10px; }
         .sort-select, .limit-select { padding: 8px 15px; border: 1px solid var(--border); border-radius: 30px; background: var(--card); color: var(--text); cursor: pointer; }
         
-        /* Products */
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .card { background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; position: relative; border: 1px solid var(--border); }
         .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
@@ -72,12 +70,10 @@
         .add-btn { width: 100%; padding: 10px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.2s; }
         .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        /* Pagination */
         .pagination { display: flex; justify-content: center; gap: 20px; margin-top: 30px; padding: 20px; }
         .pagination button { padding: 10px 25px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 30px; cursor: pointer; }
         .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
         
-        /* Auth Modal */
         .auth-modal, .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
         .auth-content, .cart-content { background: var(--card); border-radius: 20px; max-width: 450px; width: 90%; padding: 30px; position: relative; }
         .auth-content h3 { margin-bottom: 20px; text-align: center; }
@@ -86,14 +82,12 @@
         .auth-switch { text-align: center; margin-top: 15px; color: var(--primary); cursor: pointer; }
         .error-msg { color: var(--danger); font-size: 12px; text-align: center; margin-bottom: 10px; }
         
-        /* Cart Modal */
         .cart-content { max-width: 550px; max-height: 85vh; overflow-y: auto; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
         .cart-item-actions button { width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer; margin: 0 2px; }
         .delivery-section, .promo-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
         .delivery-cost { background: var(--bg); padding: 10px; border-radius: 10px; margin-top: 10px; display: none; }
         
-        /* Footer */
         footer { text-align: center; padding: 30px; color: var(--text-light); font-size: 12px; margin-top: 30px; border-top: 1px solid var(--border); }
         .footer-contacts { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; flex-wrap: wrap; }
         .footer-contacts a { color: var(--primary); text-decoration: none; }
@@ -201,23 +195,22 @@
         // ========== АВТОРИЗАЦІЯ ==========
         let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
         let users = JSON.parse(localStorage.getItem('territory_users') || '[]');
-        let authMode = 'login'; // 'login' or 'register'
+        let authMode = 'login';
         
-        // Отримання кошика поточного користувача
         function getUserCart() {
             if (!currentUser) return {};
-            const userData = JSON.parse(localStorage.getItem(`territory_cart_${currentUser.email}`) || '{}');
-            return userData;
+            return JSON.parse(localStorage.getItem(`territory_cart_${currentUser.email}`) || '{}');
         }
         
-        function saveUserCart(cart) {
+        function saveUserCart(cartData) {
             if (currentUser) {
-                localStorage.setItem(`territory_cart_${currentUser.email}`, JSON.stringify(cart));
+                localStorage.setItem(`territory_cart_${currentUser.email}`, JSON.stringify(cartData));
             }
         }
         
+        let cart = getUserCart();
+        
         function updateCartUI() {
-            const cart = getUserCart();
             let count = Object.values(cart).reduce((s, i) => s + (i.qty || 0), 0);
             document.getElementById('cartCount').textContent = count;
             renderCart();
@@ -228,23 +221,19 @@
             updateCartUI();
         }
         
-        // Ініціалізація кошика при завантаженні
-        let cart = getUserCart();
-        
         function updateAuthButton() {
-            const btn = document.getElementById('authBtnText');
+            const btnSpan = document.getElementById('authBtnText');
             if (currentUser) {
-                btn.innerHTML = `<i class="fas fa-user-check"></i> ${currentUser.email.split('@')[0]}`;
-                document.getElementById('authBtn').innerHTML = btn.innerHTML;
+                btnSpan.innerHTML = currentUser.email.split('@')[0];
+                document.getElementById('authBtn').innerHTML = '<i class="fas fa-user-check"></i> ' + btnSpan.innerHTML;
             } else {
-                btn.innerHTML = 'Увійти';
+                btnSpan.innerHTML = 'Увійти';
                 document.getElementById('authBtn').innerHTML = '<i class="fas fa-user"></i> Увійти';
             }
         }
         
         function openAuthModal() {
             if (currentUser) {
-                // Якщо користувач вже залогінений - вихід
                 currentUser = null;
                 localStorage.removeItem('territory_current_user');
                 cart = getUserCart();
@@ -260,9 +249,7 @@
             setAuthMode('login');
         }
         
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-        }
+        function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
         
         function setAuthMode(mode) {
             authMode = mode;
@@ -280,70 +267,48 @@
             }
         }
         
-        function toggleAuthMode() {
-            if (authMode === 'login') {
-                setAuthMode('register');
-            } else {
-                setAuthMode('login');
-            }
-        }
+        function toggleAuthMode() { setAuthMode(authMode === 'login' ? 'register' : 'login'); }
         
         function handleAuth() {
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value.trim();
             const errorDiv = document.getElementById('authError');
-            
-            if (!email || !password) {
-                errorDiv.innerHTML = 'Заповніть всі поля';
-                return;
-            }
+            if (!email || !password) { errorDiv.innerHTML = 'Заповніть всі поля'; return; }
             
             if (authMode === 'register') {
-                // Перевірка чи існує користувач
-                if (users.find(u => u.email === email)) {
-                    errorDiv.innerHTML = 'Користувач з таким email вже існує';
-                    return;
-                }
-                // Реєстрація
+                if (users.find(u => u.email === email)) { errorDiv.innerHTML = 'Користувач вже існує'; return; }
                 const newUser = { email, password, registeredAt: new Date().toISOString() };
                 users.push(newUser);
                 localStorage.setItem('territory_users', JSON.stringify(users));
                 currentUser = newUser;
                 localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
-                // Ініціалізація порожнього кошика для нового користувача
                 localStorage.setItem(`territory_cart_${email}`, JSON.stringify({}));
                 cart = {};
                 updateCartUI();
                 showToast('✅ Реєстрація успішна!');
             } else {
-                // Вхід
                 const user = users.find(u => u.email === email && u.password === password);
-                if (!user) {
-                    errorDiv.innerHTML = 'Невірний email або пароль';
-                    return;
-                }
+                if (!user) { errorDiv.innerHTML = 'Невірний email або пароль'; return; }
                 currentUser = user;
                 localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
                 cart = getUserCart();
                 updateCartUI();
                 showToast(`👋 Ласкаво просимо, ${email.split('@')[0]}!`);
             }
-            
             updateAuthButton();
             closeAuthModal();
             renderCart();
         }
         
-        // ========== ДОПОМІЖНІ ФУНКЦІЇ ==========
+        // ========== ДОПОМІЖНІ ==========
         function getStock(p) { let w = p.whs?.find(w => w.id === 1); return w ? parseInt(String(w.q).replace(/[^0-9]/g, '')) || 0 : 0; }
         function getPrice(p) { return p.sprice || 0; }
         function isPromo(p) { return p.sprice > 0 && p.RRP_UAH > 0 && p.sprice < p.RRP_UAH; }
         function showToast(msg) { let t = document.createElement('div'); t.className = 'toast'; t.innerHTML = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2000); }
-        
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
         if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
         
-        // ========== TELEGRAM СПОВІЩЕННЯ ==========
+        // ========== TELEGRAM ==========
         async function sendTelegramNotification(order) {
             const itemsList = order.items.map(i => `• ${i.name.substring(0, 35)} x${i.qty} = ${(i.price * i.qty).toFixed(2)} ₴`).join('\n');
             const message = `🛒 **НОВЕ ЗАМОВЛЕННЯ!**\n\n👤 ${order.customer}\n📞 ${order.phone}\n💰 ${order.total} ₴\n📦 ${order.items.reduce((s,i) => s + i.qty, 0)} шт\n\n📋 **Деталі:**\n${itemsList}`;
@@ -352,29 +317,17 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'Markdown' })
                 });
-                console.log('✅ Telegram сповіщення відправлено');
-            } catch(e) { console.error('Telegram помилка:', e); }
+            } catch(e) { console.error(e); }
         }
         
         // ========== КОШИК ==========
-        function updateCartUI() {
-            let c = Object.values(cart).reduce((s, i) => s + (i.qty || 0), 0);
-            document.getElementById('cartCount').textContent = c;
-            renderCart();
-        }
-        
         function addToCart(code, name, price) {
-            if (!currentUser) {
-                showToast('🔐 Увійдіть в акаунт, щоб додавати товари в кошик');
-                openAuthModal();
-                return;
-            }
-            let finalPrice = parseFloat(price);
-            if (isNaN(finalPrice)) finalPrice = 0;
+            if (!currentUser) { showToast('🔐 Увійдіть в акаунт'); openAuthModal(); return; }
+            let finalPrice = parseFloat(price) || 0;
             if (cart[code]) { cart[code].qty += 1; } 
             else { cart[code] = { name: name.substring(0, 40), price: finalPrice, qty: 1 }; }
             saveCart();
-            showToast(`✅ Додано до кошика (${finalPrice.toFixed(2)} ₴)`);
+            showToast(`✅ Додано (${finalPrice.toFixed(2)} ₴)`);
         }
         
         function removeFromCart(code) { delete cart[code]; saveCart(); showToast('🗑 Видалено'); }
@@ -387,7 +340,7 @@
             let container = document.getElementById('cartList');
             let items = Object.entries(cart);
             if (items.length === 0) { container.innerHTML = '<div style="padding:30px;text-align:center">🛒 Кошик порожній</div>'; document.getElementById('cartTotal').innerHTML = ''; return; }
-            container.innerHTML = items.map(([code, item]) => `<div class="cart-item"><div><strong>${item.name}</strong><br>${item.price.toFixed(2)} ₴ × ${item.qty} = ${(item.price * item.qty).toFixed(2)} ₴</div><div class="cart-item-actions"><button onclick="updateQty('${code}',-1)" style="background:#fc8181;color:white;">-</button> ${item.qty} <button onclick="updateQty('${code}',1)" style="background:#48bb78;color:white;">+</button> <button onclick="removeFromCart('${code}')" style="background:#666;color:white;">🗑</button></div></div>`).join('');
+            container.innerHTML = items.map(([code, item]) => `<div class="cart-item"><div><strong>${item.name}</strong><br>${item.price.toFixed(2)} ₴ × ${item.qty} = ${(item.price * item.qty).toFixed(2)} ₴</div><div><button onclick="updateQty('${code}',-1)" style="background:#fc8181;color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer">-</button> ${item.qty} <button onclick="updateQty('${code}',1)" style="background:#48bb78;color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer">+</button> <button onclick="removeFromCart('${code}')" style="background:#666;color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer">🗑</button></div></div>`).join('');
             let subtotal = Object.values(cart).reduce((s, i) => s + i.price * i.qty, 0);
             let total = discount.percent > 0 ? subtotal * (1 - discount.percent/100) : subtotal;
             document.getElementById('cartTotal').innerHTML = `<strong>Сума: ${total.toFixed(2)} ₴</strong>${discount.percent > 0 ? `<br><span style="color:#48bb78">Знижка ${discount.percent}%</span>` : ''}`;
@@ -418,11 +371,7 @@
         }
         
         function checkout() {
-            if (!currentUser) {
-                showToast('🔐 Увійдіть в акаунт, щоб оформити замовлення');
-                openAuthModal();
-                return;
-            }
+            if (!currentUser) { showToast('🔐 Увійдіть в акаунт'); openAuthModal(); return; }
             if (Object.keys(cart).length === 0) { showToast('❌ Кошик порожній'); return; }
             let customer = prompt('Ваше ім\'я:', currentUser?.email?.split('@')[0] || 'Гість') || 'Гість';
             let phone = prompt('Телефон:', '+380') || '+380';
@@ -448,7 +397,7 @@
         }
         function startVoiceSearch() { if (recognition) recognition.start(); else alert('Голосовий пошук не підтримується'); }
         
-        // ========== ФІЛЬТРИ ТА ВІДОБРАЖЕННЯ ==========
+        // ========== ФІЛЬТРИ ==========
         let allProducts = [], filtered = [], currentPage = 1, itemsPerPage = 24;
         let searches = JSON.parse(localStorage.getItem('territory_searches') || '[]');
         
@@ -459,4 +408,3 @@
             let category = document.getElementById('categorySelect').value;
             let promoType = document.getElementById('promoSelect').value;
             let sort = document.getElementById('sortSelect').value;
-            itemsPerPage = parseInt
