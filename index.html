@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Territory Comfort - Каталог товарів</title>
+    <meta name="description" content="Понад 26 000 товарів з актуальними цінами та наявністю">
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2XLV0L5BWE"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2XLV0L5BWE');
+    </script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -47,9 +58,9 @@
         .pagination button { padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 30px; cursor: pointer; }
         .pagination button:disabled { opacity: 0.5; }
         .auth-modal, .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
-        .auth-content, .cart-content { background: white; border-radius: 20px; max-width: 400px; width: 90%; padding: 25px; max-height: 80vh; overflow-y: auto; }
-        .auth-content input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .auth-content button { width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .auth-content, .cart-content { background: white; border-radius: 20px; max-width: 450px; width: 90%; padding: 25px; max-height: 85vh; overflow-y: auto; }
+        .auth-content input, .auth-content select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .auth-content button { width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 5px; }
         .auth-switch { text-align: center; margin-top: 10px; color: #667eea; cursor: pointer; }
         .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; flex-wrap: wrap; gap: 10px; }
         .delivery-section, .promo-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; }
@@ -62,13 +73,19 @@
         .loading { text-align: center; padding: 50px; color: #666; }
         .to-top { position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px; background: #667eea; color: white; border: none; border-radius: 50%; cursor: pointer; display: none; z-index: 1000; }
         @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } }
+        
+        .profile-info { background: rgba(255,255,255,0.2); border-radius: 40px; padding: 5px 15px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo" onclick="location.reload()"><h1>🛒 Territory Comfort</h1><p>Актуальні ціни та наявність</p></div>
         <div class="contacts"><span>📞 +38 (073) 044-5800</span><span>📞 +38 (098) 044-5800</span></div>
-        <div><button class="theme-btn" onclick="toggleTheme()">🌙</button><button class="cart-btn" onclick="openCart()">🛒 Кошик <span id="cartCount" class="cart-count">0</span></button><button class="auth-btn" id="authBtn" onclick="openAuthModal()">👤 Увійти</button></div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+            <button class="cart-btn" onclick="openCart()">🛒 Кошик <span id="cartCount" class="cart-count">0</span></button>
+            <div id="authContainer"><button class="auth-btn" id="authBtn" onclick="openAuthModal()">👤 Увійти</button></div>
+        </div>
     </div>
 
     <div class="filters">
@@ -87,17 +104,87 @@
     <footer><div class="footer-contacts"><a href="#">📞 +38 (073) 044-5800</a><a href="#">📞 +38 (098) 044-5800</a><a href="#">📍 Київ</a><a href="#">📦 Доставка</a><a href="#">💳 Оплата</a><a href="#">📧 Контакти</a></div><p>© 2025 Territory Comfort | Дані оновлюються автоматично</p></footer>
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
-    <div id="authModal" class="auth-modal"><div class="auth-content"><button onclick="closeAuthModal()" style="float:right;font-size:24px;background:none;border:none">&times;</button><h3 id="authTitle">Вхід</h3><div id="authError" style="color:red;font-size:12px"></div><input type="email" id="authEmail" placeholder="Email"><input type="password" id="authPassword" placeholder="Пароль"><button id="authSubmitBtn" onclick="handleAuth()">Увійти</button><div id="authSwitch" class="auth-switch" onclick="toggleAuthMode()">Немає акаунту? Зареєструватися</div></div></div>
+    <!-- Auth Modal (розширена реєстрація) -->
+    <div id="authModal" class="auth-modal">
+        <div class="auth-content">
+            <button onclick="closeAuthModal()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
+            <h3 id="authTitle">Вхід</h3>
+            <div id="authError" style="color:red;font-size:12px;margin-bottom:10px"></div>
+            
+            <div id="loginFields">
+                <input type="email" id="loginEmail" placeholder="Email">
+                <input type="password" id="loginPassword" placeholder="Пароль">
+            </div>
+            
+            <div id="registerFields" style="display:none;">
+                <input type="text" id="regFullName" placeholder="ПІБ">
+                <input type="email" id="regEmail" placeholder="Email">
+                <input type="tel" id="regPhone" placeholder="Телефон">
+                <input type="text" id="regCity" placeholder="Місто">
+                <input type="text" id="regAddress" placeholder="Адреса доставки">
+                <input type="password" id="regPassword" placeholder="Пароль">
+                <input type="password" id="regConfirmPassword" placeholder="Підтвердіть пароль">
+            </div>
+            
+            <button id="authSubmitBtn" onclick="handleAuth()">Увійти</button>
+            <div id="authSwitch" class="auth-switch" onclick="toggleAuthMode()">Немає акаунту? Зареєструватися</div>
+        </div>
+    </div>
 
-    <div id="cartModal" class="cart-modal"><div class="cart-content"><button onclick="closeCart()" style="float:right;font-size:24px;background:none;border:none">&times;</button><h3>🛒 Кошик</h3><div id="cartList"></div><div id="cartTotal"></div><div class="delivery-section"><strong>🚚 Доставка</strong><select id="citySelect"><option value="">Оберіть місто</option><option value="Київ">Київ</option><option value="Львів">Львів</option><option value="Одеса">Одеса</option></select><div id="deliveryCost" class="delivery-cost"></div></div><div class="promo-section"><strong>🏷 Промокод</strong><input type="text" id="promoCode" placeholder="WELCOME10, ERC20, SUMMER15"><button onclick="applyPromo()">Застосувати</button><div id="promoInfo" style="font-size:12px"></div></div><button onclick="clearCart()" style="width:100%;padding:10px;background:#fc8181;color:white;border:none;border-radius:10px;margin-top:10px">Очистити</button><button onclick="checkout()" style="width:100%;padding:10px;background:#48bb78;color:white;border:none;border-radius:10px;margin-top:10px">💳 Оформити</button></div></div>
+    <!-- Cart Modal -->
+    <div id="cartModal" class="cart-modal">
+        <div class="cart-content">
+            <button onclick="closeCart()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
+            <h3>🛒 Кошик</h3>
+            <div id="cartList"></div>
+            <div id="cartTotal"></div>
+            <div class="delivery-section">
+                <strong>🚚 Доставка</strong>
+                <select id="citySelect"><option value="">Оберіть місто</option><option value="Київ">Київ</option><option value="Львів">Львів</option><option value="Одеса">Одеса</option><option value="Дніпро">Дніпро</option><option value="Харків">Харків</option></select>
+                <div id="deliveryCost" class="delivery-cost"></div>
+            </div>
+            <div class="promo-section">
+                <strong>🏷 Промокод</strong>
+                <input type="text" id="promoCode" placeholder="WELCOME10, ERC20, SUMMER15">
+                <button onclick="applyPromo()">Застосувати</button>
+                <div id="promoInfo" style="font-size:12px"></div>
+            </div>
+            <button onclick="clearCart()" style="width:100%;padding:10px;background:#fc8181;color:white;border:none;border-radius:10px;margin-top:10px">Очистити</button>
+            <button onclick="checkout()" style="width:100%;padding:10px;background:#48bb78;color:white;border:none;border-radius:10px;margin-top:10px">💳 Оформити</button>
+        </div>
+    </div>
 
     <script>
+        // ========== GOOGLE ANALYTICS ==========
+        function gtag_report(){dataLayer.push(arguments);}
+        
+        // ========== КОНФІГУРАЦІЯ TELEGRAM ==========
         const TELEGRAM_BOT_TOKEN = '8620493037:AAEhpB19nqTnqLe68ndlV9TPTnEgBq1FZQc';
         const TELEGRAM_CHAT_ID = '506201498';
         
+        // ========== АВТОРИЗАЦІЯ ==========
         let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
         let users = JSON.parse(localStorage.getItem('territory_users') || '[]');
         let authMode = 'login';
+        
+        function updateAuthUI() {
+            const container = document.getElementById('authContainer');
+            if (currentUser) {
+                container.innerHTML = `<div class="profile-info"><span>👤 ${currentUser.fullName || currentUser.email.split('@')[0]}</span><button class="auth-btn" onclick="logout()" style="background:rgba(255,255,255,0.2);padding:5px 12px;">🚪 Вихід</button></div>`;
+            } else {
+                container.innerHTML = `<button class="auth-btn" id="authBtn" onclick="openAuthModal()">👤 Увійти</button>`;
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('territory_current_user');
+            cart = getUserCart();
+            updateCartUI();
+            updateAuthUI();
+            showToast('👋 Ви вийшли з акаунту');
+            gtag('event', 'logout', { event_category: 'user', event_label: 'logout' });
+        }
         
         function getUserCart() { return currentUser ? JSON.parse(localStorage.getItem(`territory_cart_${currentUser.email}`) || '{}') : {}; }
         function saveUserCart(data) { if(currentUser) localStorage.setItem(`territory_cart_${currentUser.email}`, JSON.stringify(data)); }
@@ -109,41 +196,114 @@
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); }
         if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
         
-        function updateAuthButton() { let btn=document.getElementById('authBtn'); if(currentUser) btn.innerHTML=`👤 ${currentUser.email.split('@')[0]}`; else btn.innerHTML='👤 Увійти'; }
-        
         function openAuthModal() {
-            if(currentUser) { currentUser=null; localStorage.removeItem('territory_current_user'); cart=getUserCart(); updateCartUI(); updateAuthButton(); showToast('👋 Ви вийшли'); return; }
-            document.getElementById('authModal').style.display='flex'; setAuthMode('login');
+            document.getElementById('authModal').style.display='flex';
+            setAuthMode('login');
+            document.getElementById('authError').innerHTML = '';
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('regFullName').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regCity').value = '';
+            document.getElementById('regAddress').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
         }
         function closeAuthModal() { document.getElementById('authModal').style.display='none'; }
+        
         function setAuthMode(mode) {
-            authMode=mode; let title=document.getElementById('authTitle'), submitBtn=document.getElementById('authSubmitBtn'), switchDiv=document.getElementById('authSwitch');
-            if(mode==='login') { title.innerText='Вхід'; submitBtn.innerText='Увійти'; switchDiv.innerText='Немає акаунту? Зареєструватися'; }
-            else { title.innerText='Реєстрація'; submitBtn.innerText='Зареєструватися'; switchDiv.innerText='Вже є акаунт? Увійти'; }
+            authMode = mode;
+            const title = document.getElementById('authTitle');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const switchDiv = document.getElementById('authSwitch');
+            const loginFields = document.getElementById('loginFields');
+            const registerFields = document.getElementById('registerFields');
+            
+            if (mode === 'login') {
+                title.innerText = 'Вхід';
+                submitBtn.innerText = 'Увійти';
+                switchDiv.innerText = 'Немає акаунту? Зареєструватися';
+                loginFields.style.display = 'block';
+                registerFields.style.display = 'none';
+            } else {
+                title.innerText = 'Реєстрація';
+                submitBtn.innerText = 'Зареєструватися';
+                switchDiv.innerText = 'Вже є акаунт? Увійти';
+                loginFields.style.display = 'none';
+                registerFields.style.display = 'block';
+            }
         }
-        function toggleAuthMode() { setAuthMode(authMode==='login'?'register':'login'); }
+        
+        function toggleAuthMode() { setAuthMode(authMode === 'login' ? 'register' : 'login'); }
         
         function handleAuth() {
-            let email=document.getElementById('authEmail').value.trim(), password=document.getElementById('authPassword').value.trim(), errorDiv=document.getElementById('authError');
-            if(!email||!password) { errorDiv.innerText='Заповніть всі поля'; return; }
-            if(authMode==='register') {
-                if(users.find(u=>u.email===email)) { errorDiv.innerText='Користувач вже існує'; return; }
-                let newUser={email,password}; users.push(newUser); localStorage.setItem('territory_users',JSON.stringify(users));
-                currentUser=newUser; localStorage.setItem('territory_current_user',JSON.stringify(currentUser));
-                localStorage.setItem(`territory_cart_${email}`,JSON.stringify({})); cart={}; updateCartUI(); showToast('✅ Реєстрація успішна!');
+            if (authMode === 'register') {
+                const fullName = document.getElementById('regFullName').value.trim();
+                const email = document.getElementById('regEmail').value.trim();
+                const phone = document.getElementById('regPhone').value.trim();
+                const city = document.getElementById('regCity').value.trim();
+                const address = document.getElementById('regAddress').value.trim();
+                const password = document.getElementById('regPassword').value;
+                const confirmPassword = document.getElementById('regConfirmPassword').value;
+                const errorDiv = document.getElementById('authError');
+                
+                if (!fullName || !email || !phone || !city || !address || !password) {
+                    errorDiv.innerText = 'Заповніть всі поля';
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    errorDiv.innerText = 'Паролі не співпадають';
+                    return;
+                }
+                if (users.find(u => u.email === email)) {
+                    errorDiv.innerText = 'Користувач з таким email вже існує';
+                    return;
+                }
+                
+                const newUser = { fullName, email, phone, city, address, password, registeredAt: new Date().toISOString() };
+                users.push(newUser);
+                localStorage.setItem('territory_users', JSON.stringify(users));
+                currentUser = newUser;
+                localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
+                localStorage.setItem(`territory_cart_${email}`, JSON.stringify({}));
+                cart = {};
+                updateCartUI();
+                updateAuthUI();
+                showToast(`✅ Вітаємо, ${fullName}! Реєстрація успішна!`);
+                gtag('event', 'sign_up', { event_category: 'user', event_label: email });
+                closeAuthModal();
             } else {
-                let user=users.find(u=>u.email===email&&u.password===password);
-                if(!user) { errorDiv.innerText='Невірний email або пароль'; return; }
-                currentUser=user; localStorage.setItem('territory_current_user',JSON.stringify(currentUser)); cart=getUserCart(); updateCartUI(); showToast(`👋 Ласкаво просимо!`);
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const errorDiv = document.getElementById('authError');
+                
+                if (!email || !password) {
+                    errorDiv.innerText = 'Заповніть всі поля';
+                    return;
+                }
+                const user = users.find(u => u.email === email && u.password === password);
+                if (!user) {
+                    errorDiv.innerText = 'Невірний email або пароль';
+                    return;
+                }
+                currentUser = user;
+                localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
+                cart = getUserCart();
+                updateCartUI();
+                updateAuthUI();
+                showToast(`👋 Ласкаво просимо, ${user.fullName || user.email.split('@')[0]}!`);
+                gtag('event', 'login', { event_category: 'user', event_label: email });
+                closeAuthModal();
             }
-            updateAuthButton(); closeAuthModal();
         }
         
         function getStock(p) { let w=p.whs?.find(w=>w.id===1); return w?parseInt(String(w.q).replace(/[^0-9]/g,''))||0:0; }
         
         async function sendTelegramNotification(order) {
-            let itemsList=order.items.map(i=>`• ${i.name} x${i.qty} = ${(i.price*i.qty).toFixed(2)} ₴`).join('\n');
-            let message=`🛒 **НОВЕ ЗАМОВЛЕННЯ!**\n\n👤 ${order.customer}\n📞 ${order.phone}\n💰 ${order.total} ₴\n📦 ${order.items.reduce((s,i)=>s+i.qty,0)} шт\n\n📋 **Деталі:**\n${itemsList}`;
+            const itemsList = order.items.map(i => `• ${i.name} x${i.qty} = ${(i.price*i.qty).toFixed(2)} ₴`).join('\n');
+            const customerInfo = `👤 ${order.customer}\n📞 ${order.phone}\n📍 ${order.city || 'не вибрано'}\n🏠 ${order.address || 'не вказано'}`;
+            const message = `🛒 **НОВЕ ЗАМОВЛЕННЯ!**\n\n${customerInfo}\n💰 ${order.total} ₴\n📦 ${order.items.reduce((s,i)=>s+i.qty,0)} шт\n\n📋 **Деталі:**\n${itemsList}`;
             try { await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:message,parse_mode:'Markdown'})}); } catch(e){}
         }
         
@@ -152,7 +312,9 @@
             let finalPrice=parseFloat(price)||0;
             if(cart[code]) cart[code].qty+=1; else cart[code]={name:name.substring(0,40),price:finalPrice,qty:1};
             saveCart(); showToast(`✅ Додано (${finalPrice.toFixed(2)} ₴)`);
+            gtag('event', 'add_to_cart', { event_category: 'ecommerce', event_label: code, value: finalPrice });
         }
+        
         function removeFromCart(code) { delete cart[code]; saveCart(); showToast('🗑 Видалено'); }
         function updateQty(code,delta) { if(cart[code]) { let n=(cart[code].qty||0)+delta; if(n<=0) delete cart[code]; else cart[code].qty=n; saveCart(); } }
         function clearCart() { cart={}; discount={percent:0}; localStorage.setItem('territory_discount',JSON.stringify(discount)); saveCart(); showToast('Кошик очищено'); }
@@ -162,7 +324,7 @@
         function renderCart() {
             let container=document.getElementById('cartList'), items=Object.entries(cart);
             if(items.length===0) { container.innerHTML='<div style="padding:30px;text-align:center">🛒 Кошик порожній</div>'; document.getElementById('cartTotal').innerHTML=''; return; }
-            container.innerHTML=items.map(([code,item])=>`<div class="cart-item"><div><strong>${item.name}</strong><br>${item.price.toFixed(2)} ₴ × ${item.qty} = ${(item.price*item.qty).toFixed(2)} ₴</div><div><button onclick="updateQty('${code}',-1)" style="background:#fc8181;color:white;border:none;width:28px;height:28px;border-radius:50%">-</button> ${item.qty} <button onclick="updateQty('${code}',1)" style="background:#48bb78;color:white;border:none;width:28px;height:28px;border-radius:50%">+</button> <button onclick="removeFromCart('${code}')" style="background:#666;color:white;border:none;width:28px;height:28px;border-radius:50%">🗑</button></div></div>`).join('');
+            container.innerHTML=items.map(([code,item])=>`<div class="cart-item"><div><strong>${item.name}</strong><br>${item.price.toFixed(2)} ₴ × ${item.qty} = ${(item.price*item.qty).toFixed(2)} ₴</div><div><button onclick="updateQty('${code}',-1)" style="background:#fc8181;color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer">-</button> ${item.qty} <button onclick="updateQty('${code}',1)" style="background:#48bb78;color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer">+</button> <button onclick="removeFromCart('${code}')" style="background:#666;color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer">🗑</button></div></div>`).join('');
             let total=Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0), finalTotal=discount.percent>0?total*(1-discount.percent/100):total;
             document.getElementById('cartTotal').innerHTML=`<strong>Сума: ${finalTotal.toFixed(2)} ₴</strong>${discount.percent>0?`<br><span style="color:#48bb78">Знижка ${discount.percent}%</span>`:''}`;
         }
@@ -170,7 +332,7 @@
         function calculateDelivery() {
             let city=document.getElementById('citySelect')?.value;
             if(!city||Object.keys(cart).length===0) { document.getElementById('deliveryCost').style.display='none'; return; }
-            let weight=Object.values(cart).reduce((s,i)=>s+0.5*i.qty,0), cityCost={'Київ':0,'Львів':20,'Одеса':25}, cost=50+weight*10+(cityCost[city]||30);
+            let weight=Object.values(cart).reduce((s,i)=>s+0.5*i.qty,0), cityCost={'Київ':0,'Львів':20,'Одеса':25,'Дніпро':15,'Харків':20}, cost=50+weight*10+(cityCost[city]||30);
             document.getElementById('deliveryCost').innerHTML=`🚚 Доставка до ${city}: ${cost.toFixed(2)} ₴<br>📦 Вага: ${weight.toFixed(1)} кг`;
             document.getElementById('deliveryCost').style.display='block';
         }
@@ -182,19 +344,24 @@
         function checkout() {
             if(!currentUser) { showToast('🔐 Увійдіть в акаунт'); openAuthModal(); return; }
             if(Object.keys(cart).length===0) { showToast('❌ Кошик порожній'); return; }
-            let customer=prompt('Ваше ім\'я:',currentUser?.email?.split('@')[0]||'Гість')||'Гість';
-            let phone=prompt('Телефон:','+380')||'+380';
+            let customer = currentUser.fullName || currentUser.email.split('@')[0];
+            let phone = currentUser.phone || prompt('Телефон:', '+380') || '+380';
+            let city = document.getElementById('citySelect')?.value || currentUser.city || '';
+            let address = currentUser.address || prompt('Адреса доставки:', '') || '';
             let subtotal=Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0);
-            let city=document.getElementById('citySelect')?.value, cityCost={'Київ':0,'Львів':20,'Одеса':25};
+            let cityCost={'Київ':0,'Львів':20,'Одеса':25,'Дніпро':15,'Харків':20};
             let delivery=city?50+Object.values(cart).reduce((s,i)=>s+0.5*i.qty,0)*10+(cityCost[city]||30):0;
             let total=discount.percent>0?(subtotal+delivery)*(1-discount.percent/100):subtotal+delivery;
-            let order={id:Date.now(),date:new Date().toISOString(),items:Object.values(cart),total:total.toFixed(2),customer,phone,delivery:city||'не вибрана'};
+            let order={id:Date.now(),date:new Date().toISOString(),items:Object.values(cart),total:total.toFixed(2),customer,phone,delivery:city||'не вибрана',address,city:city||'',userEmail:currentUser.email};
             let orders=JSON.parse(localStorage.getItem('territory_orders')||'[]'); orders.unshift(order); if(orders.length>100) orders.pop(); localStorage.setItem('territory_orders',JSON.stringify(orders));
-            sendTelegramNotification(order); showToast(`✅ Замовлення на ${total.toFixed(2)} ₴ прийнято!`); clearCart(); closeCart();
+            sendTelegramNotification(order);
+            showToast(`✅ Замовлення на ${total.toFixed(2)} ₴ прийнято!`);
+            gtag('event', 'purchase', { event_category: 'ecommerce', value: total, currency: 'UAH' });
+            clearCart(); closeCart();
         }
         
         let recognition=null;
-        if('webkitSpeechRecognition' in window) { recognition=new webkitSpeechRecognition(); recognition.lang='uk-UA'; recognition.onresult=(e)=>{ document.getElementById('searchInput').value=e.results[0][0].transcript; applyFilters(); }; }
+        if('webkitSpeechRecognition' in window) { recognition=new webkitSpeechRecognition(); recognition.lang='uk-UA'; recognition.onresult=(e)=>{ document.getElementById('searchInput').value=e.results[0][0].transcript; applyFilters(); gtag('event', 'voice_search', { event_category: 'search', event_label: e.results[0][0].transcript }); }; }
         function startVoiceSearch() { if(recognition) recognition.start(); else alert('Голосовий пошук не підтримується'); }
         
         let allProducts=[], filtered=[], currentPage=1, itemsPerPage=24;
@@ -206,6 +373,7 @@
             filtered=allProducts.filter(p=>{ if(vendor&&p.vendorId!==vendor) return false; if(category&&p.category!==category) return false; if(search&&!`${p.name||p.gname||''} ${p.code||''} ${p.vendor||''}`.toLowerCase().includes(search)) return false; return true; });
             if(sort==='price-asc') filtered.sort((a,b)=>(a.price||a.sprice||0)-(b.price||b.sprice||0)); if(sort==='price-desc') filtered.sort((a,b)=>(b.price||b.sprice||0)-(a.price||a.sprice||0));
             currentPage=1; renderProducts(); document.getElementById('statsText').innerHTML=`📊 ${filtered.length} товарів знайдено`;
+            if(search && search.length>2) gtag('event', 'search', { event_category: 'search', event_label: search });
         }
         
         function renderProducts() {
@@ -216,40 +384,4 @@
                 let stockClass=stock>5?'stock-high':(stock>0?'stock-low':'stock-out'), stockText=stock>0?`${stock} шт`:'Немає'; 
                 let imgUrl=(p.pic&&p.pic!=='null')?p.pic:'https://via.placeholder.com/200x200?text=📷'; 
                 let productName=p.name||p.gname||p.code||'Без назви';
-                return `<div class="card"><div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div><div class="card-info"><div class="vendor">${p.vendor||''}</div><div class="title">${productName.substring(0,60)}</div><div class="code">${p.code||''}</div><div>${hasPromo?`<span class="price-current">${promo.toFixed(2)}</span><span class="price-old">${price.toFixed(2)} ₴</span>`:`<span class="price-current">${price.toFixed(2)}</span>`}</div><div class="stock ${stockClass}">${stockText}</div><button class="add-btn" onclick="addToCart('${p.code}','${productName.replace(/'/g,"\\'")}',${price})" ${stock===0?'disabled':''}>🛒 В кошик</button></div></div>`; }).join('');
-            let totalPages=Math.ceil(filtered.length/itemsPerPage); document.getElementById('pageInfo').innerHTML=`Сторінка ${currentPage} / ${totalPages||1}`; document.getElementById('prevPage').disabled=currentPage===1; document.getElementById('nextPage').disabled=currentPage===totalPages||totalPages===0; document.getElementById('pagination').style.display='flex';
-        }
-        function nextPage() { let total=Math.ceil(filtered.length/itemsPerPage); if(currentPage<total) { currentPage++; renderProducts(); window.scrollTo({top:0}); } }
-        function prevPage() { if(currentPage>1) { currentPage--; renderProducts(); window.scrollTo({top:0}); } }
-        
-        async function loadProducts() {
-            try { 
-                let res=await fetch('erc_products.json'); 
-                if(!res.ok) throw new Error(`HTTP ${res.status}`); 
-                let data=await res.json(); 
-                allProducts=Array.isArray(data)?data:(data.goods||[]); 
-                console.log(`✅ ${allProducts.length} товарів`);
-                let vendors=new Map(), categories=new Set(); 
-                allProducts.forEach(p=>{ if(p.vendorId&&p.vendor) vendors.set(p.vendorId,p.vendor); if(p.category) categories.add(p.category); });
-                document.getElementById('vendorSelect').innerHTML='<option value="">Всі вендори</option>'+Array.from(vendors.entries()).sort((a,b)=>a[1].localeCompare(b[1])).map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
-                document.getElementById('categorySelect').innerHTML='<option value="">Всі категорії</option>'+Array.from(categories).sort().map(c=>`<option value="${c}">${c}</option>`).join('');
-                applyFilters();
-            } catch(e) { console.error(e); document.getElementById('productsGrid').innerHTML=`<div class="loading">❌ Помилка: ${e.message}<br>Перевірте файл erc_products.json</div>`; }
-        }
-        
-        document.getElementById('searchInput').addEventListener('input',()=>setTimeout(applyFilters,300));
-        document.getElementById('vendorSelect').addEventListener('change',applyFilters);
-        document.getElementById('categorySelect').addEventListener('change',applyFilters);
-        document.getElementById('sortSelect').addEventListener('change',applyFilters);
-        document.getElementById('limitSelect').addEventListener('change',()=>{ currentPage=1; applyFilters(); });
-        document.getElementById('prevPage').addEventListener('click',prevPage);
-        document.getElementById('nextPage').addEventListener('click',nextPage);
-        document.getElementById('citySelect').addEventListener('change',calculateDelivery);
-        
-        window.onscroll=function(){ document.getElementById('toTopBtn').style.display=window.scrollY>300?'block':'none'; };
-        document.getElementById('toTopBtn').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
-        
-        updateAuthButton(); updateCartUI(); loadProducts();
-    </script>
-</body>
-</html>
+                return `<div class="card"><div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div><div class="card-info"><div class="vendor">${p.vendor||''}</div><div class="title">${productName.substring(0,60)}</div><div class="code">${p.code||''}</div><div>${hasPromo?`<span class="price-current">${promo.toFixed(2)}</span><span class="price-old">${price.toFixed(2)}
