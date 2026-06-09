@@ -6,17 +6,16 @@
     <title>Territory Comfort - Каталог товарів</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f5f7fa; padding: 20px; transition: all 0.3s; }
         body.dark { background: #1a1a2e; color: #eee; }
-        body.dark .card, body.dark .filters, body.dark .stats-bar { background: #0f0f1a; color: #eee; border-color: #2a2a3e; }
+        body.dark .card, body.dark .filters, body.dark .stats-bar, body.dark .cart-content { background: #0f0f1a; color: #eee; border-color: #2a2a3e; }
         
         .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 25px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .logo h1 { font-size: 24px; cursor: pointer; }
         .logo p { font-size: 11px; opacity: 0.8; }
-        .cart-btn, .auth-btn, .theme-btn { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 40px; cursor: pointer; border: none; color: white; }
+        .cart-btn, .auth-btn, .theme-btn { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 40px; cursor: pointer; border: none; color: white; display: inline-flex; align-items: center; gap: 5px; }
         .cart-count { background: #ff6b6b; border-radius: 20px; padding: 2px 8px; margin-left: 5px; }
         .contacts { display: flex; gap: 15px; font-size: 13px; }
         .profile-info { background: rgba(255,255,255,0.2); border-radius: 40px; padding: 5px 15px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
@@ -50,6 +49,26 @@
         .pagination { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
         .pagination button { padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 30px; cursor: pointer; }
         .pagination button:disabled { opacity: 0.5; }
+        
+        /* Модальне вікно кошика */
+        .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+        .cart-content { background: white; border-radius: 20px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 25px; position: relative; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #ddd; flex-wrap: wrap; gap: 10px; }
+        .cart-item-info { flex: 2; }
+        .cart-item-title { font-weight: 600; margin-bottom: 5px; }
+        .cart-item-price { color: #48bb78; font-size: 14px; }
+        .cart-item-actions { display: flex; align-items: center; gap: 8px; }
+        .cart-item-actions button { width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-minus { background: #fc8181; color: white; }
+        .btn-plus { background: #48bb78; color: white; }
+        .btn-remove { background: #666; color: white; width: auto !important; border-radius: 20px !important; padding: 0 12px; }
+        .cart-total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: right; font-size: 20px; font-weight: bold; }
+        .cart-buttons { display: flex; gap: 15px; margin-top: 20px; }
+        .cart-buttons button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; }
+        .btn-checkout { background: #48bb78; color: white; }
+        .btn-clear { background: #fc8181; color: white; }
+        .btn-close { background: #667eea; color: white; }
+        
         footer { text-align: center; padding: 20px; color: #999; margin-top: 30px; border-top: 1px solid #ddd; }
         .footer-contacts { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; flex-wrap: wrap; }
         .footer-contacts a { color: #667eea; text-decoration: none; }
@@ -100,14 +119,24 @@
     </footer>
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
+    <!-- Модальне вікно кошика -->
+    <div id="cartModal" class="cart-modal">
+        <div class="cart-content">
+            <button onclick="closeCart()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
+            <h3>🛒 Кошик</h3>
+            <div id="cartItems"></div>
+            <div id="cartTotal" class="cart-total"></div>
+            <div class="cart-buttons">
+                <button class="btn-clear" onclick="clearCart()">Очистити кошик</button>
+                <button class="btn-checkout" onclick="checkout()">Оформити замовлення</button>
+                <button class="btn-close" onclick="closeCart()">Продовжити покупки</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Проста авторизація через localStorage (без Firebase для тесту)
+        // Проста авторизація через localStorage
         let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
-        
-        // Демо-користувачі для тесту
-        const demoUsers = [
-            { email: 'demo@territory.com', password: 'demo123', fullName: 'Демо Користувач' }
-        ];
         
         function updateAuthUI() {
             const container = document.getElementById('authContainer');
@@ -119,39 +148,25 @@
                 </div>`;
             } else {
                 container.innerHTML = `<button class="auth-btn" onclick="showLoginModal()">
-                    <i class="fas fa-user"></i> Увійти / Зареєструватися
+                    <i class="fas fa-user"></i> Увійти / Реєстрація
                 </button>`;
             }
         }
         
         function showLoginModal() {
-            const email = prompt('Введіть email (для тесту: demo@territory.com):');
+            const email = prompt('Введіть email:');
             if (!email) return;
-            const password = prompt('Введіть пароль (для тесту: demo123):');
+            const password = prompt('Введіть пароль:');
             if (!password) return;
             
-            const user = demoUsers.find(u => u.email === email && u.password === password);
-            if (user) {
-                currentUser = { uid: 'demo123', email: user.email, fullName: user.fullName };
-                localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
-                updateAuthUI();
-                // Оновлюємо кошик
-                cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser.uid}`) || '{}');
-                updateCartUI();
-                alert('✅ Вхід виконано успішно!');
-            } else if (email && password) {
-                // Автоматична реєстрація
-                const newUser = { uid: Date.now().toString(), email: email, fullName: email.split('@')[0] };
-                demoUsers.push({ email: email, password: password, fullName: email.split('@')[0] });
-                currentUser = newUser;
-                localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
-                updateAuthUI();
-                cart = {};
-                saveCart();
-                alert('✅ Реєстрація виконана успішно!');
-            } else {
-                alert('❌ Невірний email або пароль');
-            }
+            // Проста демо-авторизація
+            currentUser = { uid: Date.now().toString(), email: email, fullName: email.split('@')[0] };
+            localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
+            updateAuthUI();
+            // Оновлюємо кошик для нового користувача
+            cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser.uid}`) || '{}');
+            updateCartUI();
+            alert('✅ Вхід виконано успішно!');
         }
         
         window.logout = () => {
@@ -168,40 +183,113 @@
         
         function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
         
+        // Кошик
         let cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser?.uid || 'guest'}`) || '{}');
-        function updateCartUI() { let c = Object.values(cart).reduce((s,i)=>s+(i.qty||0),0); document.getElementById('cartCount').textContent = c; }
+        
+        function updateCartUI() { 
+            let c = Object.values(cart).reduce((s,i)=>s+(i.qty||0),0); 
+            document.getElementById('cartCount').textContent = c;
+            renderCart();
+        }
+        
         function saveCart() { 
             const uid = currentUser?.uid || 'guest';
             localStorage.setItem(`territory_cart_${uid}`, JSON.stringify(cart));
             updateCartUI();
         }
-        function addToCart(code, name, price) {
-            if(!currentUser) { showToast('🔐 Увійдіть в акаунт'); showLoginModal(); return; }
-            if(cart[code]) cart[code].qty += 1;
-            else cart[code] = { name: name.substring(0,40), price: parseFloat(price), qty: 1 };
-            saveCart();
-            showToast(`✅ Додано (${price.toFixed(2)} ₴)`);
-        }
-        function openCart() {
-            let items = Object.entries(cart);
-            if(items.length === 0) { alert('Кошик порожній'); return; }
-            let msg = '🛒 Ваш кошик:\n';
+        
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const items = Object.entries(cart);
+            
+            if (items.length === 0) {
+                container.innerHTML = '<div style="padding:30px;text-align:center">🛒 Кошик порожній</div>';
+                document.getElementById('cartTotal').innerHTML = '';
+                return;
+            }
+            
             let total = 0;
-            items.forEach(([code, item]) => {
-                msg += `\n${item.name} - ${item.price} ₴ x ${item.qty} = ${(item.price*item.qty).toFixed(2)} ₴`;
-                total += item.price * item.qty;
-            });
-            msg += `\n\n💰 Загалом: ${total.toFixed(2)} ₴\n\nНатисніть ОК для оформлення замовлення`;
-            if(confirm(msg + '\n\nОформити замовлення?')) {
-                if(currentUser) {
+            container.innerHTML = items.map(([code, item]) => {
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+                return `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-title">${item.name}</div>
+                            <div class="cart-item-price">${item.price.toFixed(2)} ₴</div>
+                        </div>
+                        <div class="cart-item-actions">
+                            <button class="btn-minus" onclick="updateQuantity('${code}', -1)">−</button>
+                            <span style="min-width:30px; text-align:center">${item.qty}</span>
+                            <button class="btn-plus" onclick="updateQuantity('${code}', 1)">+</button>
+                            <button class="btn-remove" onclick="removeFromCart('${code}')">Видалити</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('cartTotal').innerHTML = `💰 Загалом: ${total.toFixed(2)} ₴`;
+        }
+        
+        function updateQuantity(code, delta) {
+            if (cart[code]) {
+                const newQty = cart[code].qty + delta;
+                if (newQty <= 0) {
+                    delete cart[code];
+                } else {
+                    cart[code].qty = newQty;
+                }
+                saveCart();
+            }
+        }
+        
+        function removeFromCart(code) {
+            delete cart[code];
+            saveCart();
+            showToast('🗑 Товар видалено');
+        }
+        
+        function clearCart() {
+            if (confirm('Очистити весь кошик?')) {
+                cart = {};
+                saveCart();
+                showToast('Кошик очищено');
+            }
+        }
+        
+        function openCart() {
+            renderCart();
+            document.getElementById('cartModal').style.display = 'flex';
+        }
+        
+        function closeCart() {
+            document.getElementById('cartModal').style.display = 'none';
+        }
+        
+        function checkout() {
+            if (Object.keys(cart).length === 0) {
+                alert('Кошик порожній');
+                return;
+            }
+            
+            let total = Object.values(cart).reduce((s,i) => s + i.price * i.qty, 0);
+            let itemsList = Object.values(cart).map(i => `${i.name} x${i.qty} = ${(i.price * i.qty).toFixed(2)} ₴`).join('\n');
+            
+            if (confirm(`Ваше замовлення:\n\n${itemsList}\n\n💰 Загалом: ${total.toFixed(2)} ₴\n\nОформити замовлення?`)) {
+                if (currentUser) {
                     let orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.uid}`) || '[]');
-                    orders.unshift({ id: Date.now(), date: new Date().toISOString(), items: Object.values(cart), total: total.toFixed(2) });
+                    orders.unshift({ 
+                        id: Date.now(), 
+                        date: new Date().toISOString(), 
+                        items: Object.values(cart), 
+                        total: total.toFixed(2) 
+                    });
                     localStorage.setItem(`territory_orders_${currentUser.uid}`, JSON.stringify(orders));
                 }
                 alert('✅ Замовлення прийнято! Найближчим часом з вами зв\'яжуться.');
                 cart = {};
                 saveCart();
-                updateCartUI();
+                closeCart();
             }
         }
         
@@ -248,6 +336,13 @@
             currentPage = 1;
             renderProducts();
             document.getElementById('statsText').innerHTML = `📊 ${filtered.length} товарів знайдено`;
+        }
+        
+        function addToCart(code, name, price) {
+            if(cart[code]) cart[code].qty += 1;
+            else cart[code] = { name: name.substring(0, 40), price: parseFloat(price), qty: 1 };
+            saveCart();
+            showToast(`✅ Додано до кошика (${price.toFixed(2)} ₴)`);
         }
         
         function renderProducts() {
