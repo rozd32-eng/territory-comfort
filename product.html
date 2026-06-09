@@ -10,7 +10,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f5f7fa; padding: 20px; }
         body.dark { background: #1a1a2e; color: #eee; }
-        body.dark .product-card, body.dark .specs, body.dark .reviews-section, body.dark .similar-card { background: #0f0f1a; color: #eee; border-color: #2a2a3e; }
+        body.dark .product-card, body.dark .specs { background: #0f0f1a; color: #eee; border-color: #2a2a3e; }
         
         .container { max-width: 1200px; margin: 0 auto; }
         .back-btn { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 10px; }
@@ -30,27 +30,6 @@
         .buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .specs { background: #f7fafc; border-radius: 16px; padding: 20px; margin-top: 20px; }
         .specs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 15px; }
-        
-        .reviews-section { background: white; border-radius: 16px; padding: 20px; margin-top: 20px; }
-        .review { border-bottom: 1px solid #ddd; padding: 15px 0; }
-        .review-rating { color: #fbbf24; margin-bottom: 5px; }
-        .review-author { font-weight: 600; margin-bottom: 5px; }
-        .review-date { color: #999; font-size: 11px; margin-left: 10px; }
-        .review-text { color: #666; margin-top: 5px; }
-        .add-review { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }
-        .add-review textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; }
-        .rating-select { display: flex; gap: 5px; margin: 10px 0; }
-        .rating-star { font-size: 24px; cursor: pointer; color: #ddd; }
-        .rating-star.active { color: #fbbf24; }
-        
-        .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-        .similar-card { background: white; border-radius: 12px; padding: 15px; cursor: pointer; transition: transform 0.2s; text-align: center; border: 1px solid #e2e8f0; }
-        .similar-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .similar-img { height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-        .similar-img img { max-width: 100%; max-height: 100px; object-fit: contain; }
-        .similar-title { font-size: 12px; font-weight: 500; margin: 5px 0; }
-        .similar-price { color: #48bb78; font-weight: 700; }
-        
         .loading { text-align: center; padding: 50px; }
         .error { text-align: center; padding: 50px; color: #fc8181; }
         .theme-btn { position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px; background: #667eea; color: white; border: none; border-radius: 50%; cursor: pointer; z-index: 100; }
@@ -70,25 +49,6 @@
         
         const urlParams = new URLSearchParams(window.location.search);
         const productCode = urlParams.get('code');
-        
-        function getReviews(productCode) {
-            const allReviews = JSON.parse(localStorage.getItem('territory_reviews') || '{}');
-            return allReviews[productCode] || [];
-        }
-        
-        function saveReview(productCode, review) {
-            const allReviews = JSON.parse(localStorage.getItem('territory_reviews') || '{}');
-            if (!allReviews[productCode]) allReviews[productCode] = [];
-            allReviews[productCode].unshift(review);
-            localStorage.setItem('territory_reviews', JSON.stringify(allReviews));
-        }
-        
-        function getAverageRating(productCode) {
-            const reviews = getReviews(productCode);
-            if (reviews.length === 0) return 0;
-            const sum = reviews.reduce((s, r) => s + r.rating, 0);
-            return sum / reviews.length;
-        }
         
         function addToCart(code, name, price) {
             let cart = JSON.parse(localStorage.getItem('territory_cart') || '{}');
@@ -127,4 +87,46 @@
                 const price = product.price || product.sprice || 0;
                 const oldPrice = product.RRP_UAH || 0;
                 const isPromo = oldPrice && price < oldPrice;
-                const imgUrl = (product.pic && product.pic !== 'null') ? product.pic : 'https://via.placeholder.com/400
+                const imgUrl = (product.pic && product.pic !== 'null') ? product.pic : 'https://via.placeholder.com/400x400?text=📷';
+                const productName = product.gname || product.name || product.code || 'Без назви';
+                
+                document.getElementById('productContent').innerHTML = `
+                    <div class="product-card">
+                        <div class="product-grid">
+                            <div class="product-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/400x400?text=📷'"></div>
+                            <div>
+                                <div class="vendor">🏢 ${product.vendor || 'Невідомий вендор'}</div>
+                                <h1>${productName.substring(0, 150)}</h1>
+                                <div class="code">📋 Код: ${product.code}</div>
+                                <div class="price">${price.toFixed(2)} ₴${isPromo ? `<span class="old-price">${oldPrice.toFixed(2)} ₴</span>` : ''}</div>
+                                <div class="stock ${stockClass}">📦 ${stockText}</div>
+                                <button class="buy-btn" onclick="addToCart('${product.code}', '${productName.replace(/'/g, "\\'")}', ${price})" ${stockNum === 0 ? 'disabled' : ''}>🛒 Купити</button>
+                            </div>
+                        </div>
+                        
+                        <div class="specs">
+                            <h3>📋 Характеристики</h3>
+                            <div class="specs-grid">
+                                <div><strong>Категорія:</strong> ${product.category || '—'}</div>
+                                <div><strong>Підкатегорія:</strong> ${product.subcategory || product.subCategory || '—'}</div>
+                                <div><strong>Країна:</strong> ${product.country || '—'}</div>
+                                <div><strong>Габарити:</strong> ${product.width || '—'}×${product.height || '—'}×${product.depth || '—'} мм</div>
+                                <div><strong>Вага:</strong> ${product.weight || '—'} кг</div>
+                                <div><strong>ТН ВЕД:</strong> ${product.tnvd || '—'}</div>
+                                <div><strong>EAN:</strong> ${product.ean || '—'}</div>
+                                <div><strong>Гарантія:</strong> ${product.warr || '—'} ${product.warrunit === '2' ? 'міс.' : 'днів'}</div>
+                                <div><strong>ПДВ:</strong> ${product.vat || 20}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch(e) {
+                console.error('Помилка:', e);
+                document.getElementById('productContent').innerHTML = `<div class="error">❌ Помилка: ${e.message}</div>`;
+            }
+        }
+        
+        loadProduct();
+    </script>
+</body>
+</html>
