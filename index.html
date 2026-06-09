@@ -49,7 +49,6 @@
         .pagination button { padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 30px; cursor: pointer; }
         .pagination button:disabled { opacity: 0.5; }
         
-        /* Модальні вікна */
         .cart-modal, .orders-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
         .cart-content, .orders-content { background: white; border-radius: 20px; max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
         
@@ -70,7 +69,6 @@
         .btn-clear { background: #fc8181; color: white; }
         .btn-close { background: #667eea; color: white; }
         
-        /* Історія замовлень */
         .orders-list { display: flex; flex-direction: column; gap: 20px; }
         .order-card { border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
@@ -203,7 +201,7 @@
                 showToast('🔐 Увійдіть в акаунт');
                 return;
             }
-            const orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.uid}`) || '[]');
+            const orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.email}`) || '[]');
             const container = document.getElementById('ordersList');
             
             if (orders.length === 0) {
@@ -328,6 +326,7 @@
             document.getElementById('cartModal').style.display = 'none';
         }
         
+        // ГОЛОВНА ФУНКЦІЯ ОФОРМЛЕННЯ ЗАМОВЛЕННЯ (ВИПРАВЛЕНА)
         function checkout() {
             if (Object.keys(cart).length === 0) {
                 alert('Кошик порожній');
@@ -338,16 +337,49 @@
             let itemsList = Object.values(cart).map(i => `${i.name} x${i.qty} = ${(i.price * i.qty).toFixed(2)} ₴`).join('\n');
             
             if (confirm(`Ваше замовлення:\n\n${itemsList}\n\n💰 Загалом: ${total.toFixed(2)} ₴\n\nОформити замовлення?`)) {
+                
+                // Отримуємо дані клієнта
+                let customer = 'Гість';
+                let phone = '';
+                let email = '';
+                
                 if (currentUser) {
-                    let orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.uid}`) || '[]');
-                    orders.unshift({ 
-                        id: Date.now(), 
-                        date: new Date().toISOString(), 
-                        items: Object.values(cart), 
-                        total: total.toFixed(2) 
-                    });
-                    localStorage.setItem(`territory_orders_${currentUser.uid}`, JSON.stringify(orders));
+                    customer = currentUser.fullName || currentUser.email.split('@')[0];
+                    email = currentUser.email;
+                } else {
+                    customer = prompt('Ваше ім\'я:', 'Гість') || 'Гість';
+                    phone = prompt('Телефон:', '+380') || '+380';
+                    email = prompt('Email:', '') || '';
                 }
+                
+                const city = document.getElementById('citySelect')?.value || '';
+                
+                const order = {
+                    id: Date.now(),
+                    date: new Date().toISOString(),
+                    items: Object.values(cart),
+                    total: total.toFixed(2),
+                    customer: customer,
+                    phone: phone,
+                    email: email,
+                    city: city,
+                    status: 'new'
+                };
+                
+                // Зберігаємо замовлення в загальний список
+                let allOrders = JSON.parse(localStorage.getItem('territory_all_orders') || '[]');
+                allOrders.unshift(order);
+                if (allOrders.length > 500) allOrders.pop();
+                localStorage.setItem('territory_all_orders', JSON.stringify(allOrders));
+                
+                // Також зберігаємо для користувача, якщо він авторизований
+                if (currentUser) {
+                    let userOrders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.email}`) || '[]');
+                    userOrders.unshift(order);
+                    if (userOrders.length > 100) userOrders.pop();
+                    localStorage.setItem(`territory_orders_${currentUser.email}`, JSON.stringify(userOrders));
+                }
+                
                 alert('✅ Замовлення прийнято! Найближчим часом з вами зв\'яжуться.');
                 cart = {};
                 saveCart();
