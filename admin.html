@@ -44,7 +44,7 @@
         .action-btn.delete { background: #fc8181; }
         .action-btn.edit { background: #48bb78; }
         select { background: #1e293b; color: #fff; border: 1px solid #334155; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
-        .user-card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .user-card, .manager-card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; }
         .login-box { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; }
         .login-box h2 { margin-bottom: 20px; color: #38bdf8; }
@@ -130,11 +130,11 @@
         </div>
     </div>
 
-    <!-- Модальне вікно для додавання менеджера -->
     <div id="addManagerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; justify-content:center; align-items:center;">
         <div style="background:#1e293b; border-radius:20px; padding:30px; width:90%; max-width:400px;">
             <h3 style="margin-bottom:20px;">Додати менеджера</h3>
             <input type="text" id="managerLogin" placeholder="Логін" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
+            <input type="text" id="managerName" placeholder="ПІБ (не обов'язково)" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
             <input type="password" id="managerPassword" placeholder="Пароль" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
             <select id="managerRole" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; background:#0f172a; color:#fff;">
                 <option value="manager">Менеджер</option>
@@ -146,8 +146,8 @@
     </div>
 
     <script>
-        // Дані для входу (головний адмін)
-        let managers = JSON.parse(localStorage.getItem('territory_managers') || '[{"login":"admin","password":"Territory2025","role":"admin","name":"Головний адміністратор"}]');
+        // Завантаження менеджерів з localStorage
+        let managers = JSON.parse(localStorage.getItem('territory_managers') || '[{"login":"admin","password":"Territory2025","role":"admin","name":"Головний адміністратор","createdAt":"2025-01-01T00:00:00.000Z"}]');
         let currentManager = null;
         
         function checkAdminLogin() {
@@ -155,13 +155,16 @@
             const password = document.getElementById('adminPassword').value;
             const errorDiv = document.getElementById('loginError');
             
-            const manager = managers.find(m => m.login === login && m.password === password);
+            // Пошук менеджера (логін не чутливий до регістру)
+            const manager = managers.find(m => m.login.toLowerCase() === login.toLowerCase() && m.password === password);
+            
             if (manager) {
-                currentManager = manager;
+                currentManager = { ...manager, login: manager.login };
                 localStorage.setItem('current_manager', JSON.stringify(currentManager));
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
                 loadAllStats();
+                errorDiv.innerHTML = '';
             } else {
                 errorDiv.innerHTML = '❌ Невірний логін або пароль';
             }
@@ -190,22 +193,32 @@
         
         function addManager() {
             const login = document.getElementById('managerLogin').value.trim();
+            const name = document.getElementById('managerName').value.trim();
             const password = document.getElementById('managerPassword').value;
             const role = document.getElementById('managerRole').value;
             
             if (!login || !password) {
-                alert('Заповніть всі поля');
+                alert('Заповніть логін та пароль');
                 return;
             }
-            if (managers.find(m => m.login === login)) {
+            if (managers.find(m => m.login.toLowerCase() === login.toLowerCase())) {
                 alert('Менеджер з таким логіном вже існує');
                 return;
             }
-            managers.push({ login, password, role, name: login, createdAt: new Date().toISOString() });
+            
+            const newManager = { 
+                login: login, 
+                password: password, 
+                role: role, 
+                name: name || login, 
+                createdAt: new Date().toISOString() 
+            };
+            managers.push(newManager);
             localStorage.setItem('territory_managers', JSON.stringify(managers));
             closeAddManagerModal();
-            loadAllStats();
-            alert('✅ Менеджера додано');
+            renderManagers();
+            document.getElementById('totalManagers').textContent = managers.length;
+            alert(`✅ Менеджера ${login} додано! Пароль: ${password}`);
         }
         
         function deleteManager(login) {
@@ -216,7 +229,8 @@
             if (confirm(`Видалити менеджера ${login}?`)) {
                 managers = managers.filter(m => m.login !== login);
                 localStorage.setItem('territory_managers', JSON.stringify(managers));
-                loadAllStats();
+                renderManagers();
+                document.getElementById('totalManagers').textContent = managers.length;
                 alert('✅ Менеджера видалено');
             }
         }
@@ -244,12 +258,16 @@
             setTimeout(() => t.remove(), 2000);
         }
         
+        // Перевірка при завантаженні
         if (localStorage.getItem('current_manager')) {
             const saved = JSON.parse(localStorage.getItem('current_manager'));
-            if (managers.find(m => m.login === saved.login)) {
-                currentManager = saved;
+            const managerExists = managers.find(m => m.login === saved.login);
+            if (managerExists) {
+                currentManager = managerExists;
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
+            } else {
+                localStorage.removeItem('current_manager');
             }
         }
         
@@ -368,7 +386,7 @@
                         <span>📞 ${order.phone || '—'}</span>
                         <span>📧 ${order.email || '—'}</span>
                         ${order.manager ? `<span>👔 Обробляє: ${order.manager}</span>` : ''}
-                        ${order.statusDate ? `<span>📅 Статус оновлено: ${new Date(order.statusDate).toLocaleString()}</span>` : ''}
+                        ${order.statusDate ? `<span>📅 ${new Date(order.statusDate).toLocaleString()}</span>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -390,9 +408,16 @@
             const container = document.getElementById('managersList');
             if (managers.length === 0) { container.innerHTML = '<div class="list-item">📭 Немає менеджерів</div>'; return; }
             container.innerHTML = managers.map(m => `
-                <div class="user-card">
-                    <div><strong>${m.name || m.login}</strong><br><small>${m.login}</small><br>👔 ${m.role === 'admin' ? 'Адміністратор' : 'Менеджер'}</div>
-                    <div>📅 ${new Date(m.createdAt).toLocaleDateString() || '—'}</div>
+                <div class="manager-card">
+                    <div>
+                        <strong>${m.name || m.login}</strong><br>
+                        <small>Логін: ${m.login}</small><br>
+                        <span style="color:#38bdf8;">👔 ${m.role === 'admin' ? 'Адміністратор' : 'Менеджер'}</span>
+                    </div>
+                    <div>
+                        📅 ${m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '—'}<br>
+                        <small>Пароль: ${m.password}</small>
+                    </div>
                     ${currentManager?.role === 'admin' && m.login !== 'admin' ? `<button class="action-btn delete" onclick="deleteManager('${m.login}')">🗑 Видалити</button>` : ''}
                 </div>
             `).join('');
