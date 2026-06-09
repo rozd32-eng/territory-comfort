@@ -38,68 +38,122 @@
         .order-total { font-weight: bold; color: #48bb78; font-size: 18px; }
         .order-items { margin-top: 10px; }
         .order-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; flex-wrap: wrap; gap: 10px; }
+        
+        /* Стилі для форми входу */
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; }
+        .login-box { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; }
+        .login-box h2 { margin-bottom: 20px; color: #38bdf8; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #fff; font-size: 16px; }
+        .login-box button { width: 100%; padding: 12px; background: #38bdf8; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
+        .login-box button:hover { background: #0284c7; }
+        .error-msg { color: #fc8181; margin-top: 10px; font-size: 14px; }
         @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-chart-line"></i> Адмін панель Territory Comfort</h1>
-            <div>
-                <button class="export-btn" onclick="exportAllData()"><i class="fas fa-download"></i> Експортувати всі дані</button>
-                <button class="refresh-btn" onclick="loadAllStats()"><i class="fas fa-sync-alt"></i> Оновити</button>
-                <a href="index.html" style="color:#38bdf8; margin-left:15px;"><i class="fas fa-store"></i> На сайт</a>
+    <div id="adminContent" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-chart-line"></i> Адмін панель Territory Comfort</h1>
+                <div>
+                    <button class="export-btn" onclick="exportAllData()"><i class="fas fa-download"></i> Експортувати всі дані</button>
+                    <button class="refresh-btn" onclick="loadAllStats()"><i class="fas fa-sync-alt"></i> Оновити</button>
+                    <button class="export-btn" onclick="logout()" style="background:#fc8181;"><i class="fas fa-sign-out-alt"></i> Вийти</button>
+                    <a href="index.html" style="color:#38bdf8; margin-left:15px;"><i class="fas fa-store"></i> На сайт</a>
+                </div>
+            </div>
+            
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card"><div class="stat-value" id="totalProducts">-</div><div class="stat-label">Всього товарів</div></div>
+                <div class="stat-card"><div class="stat-value" id="totalOrders">-</div><div class="stat-label">Замовлень</div></div>
+                <div class="stat-card"><div class="stat-value" id="totalRevenue">-</div><div class="stat-label">Дохід (₴)</div></div>
+                <div class="stat-card"><div class="stat-value" id="totalUsers">-</div><div class="stat-label">Користувачів</div></div>
+                <div class="stat-card"><div class="stat-value" id="totalSearches">-</div><div class="stat-label">Пошукових запитів</div></div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card"><canvas id="ordersChart"></canvas><p style="text-align:center; margin-top:10px;">📊 Динаміка замовлень</p></div>
+                <div class="chart-card"><canvas id="categoriesChart"></canvas><p style="text-align:center; margin-top:10px;">🏷 Популярні категорії</p></div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('popular')">⭐ Популярні категорії</button>
+                <button class="tab-btn" onclick="showTab('products')">🏆 Популярні товари</button>
+                <button class="tab-btn" onclick="showTab('searches')">🔍 Пошукові запити</button>
+                <button class="tab-btn" onclick="showTab('orders')">📦 Замовлення</button>
+                <button class="tab-btn" onclick="showTab('users')">👥 Користувачі</button>
+            </div>
+            
+            <div id="popularTab" class="tab-content active">
+                <h3>⭐ ТОП-10 найпопулярніших категорій</h3>
+                <div id="popularCategories"></div>
+            </div>
+            
+            <div id="productsTab" class="tab-content">
+                <h3>🏆 ТОП-20 найпопулярніших товарів</h3>
+                <div id="popularProducts"></div>
+            </div>
+            
+            <div id="searchesTab" class="tab-content">
+                <h3>🔍 Найпопулярніші пошукові запити</h3>
+                <div id="searchesList"></div>
+            </div>
+            
+            <div id="ordersTab" class="tab-content">
+                <button class="export-btn" onclick="exportOrders()"><i class="fas fa-download"></i> Експортувати замовлення (CSV)</button>
+                <div id="ordersList"></div>
+            </div>
+            
+            <div id="usersTab" class="tab-content">
+                <button class="export-btn" onclick="exportUsers()"><i class="fas fa-download"></i> Експортувати користувачів (CSV)</button>
+                <div id="usersList"></div>
             </div>
         </div>
-        
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card"><div class="stat-value" id="totalProducts">-</div><div class="stat-label">Всього товарів</div></div>
-            <div class="stat-card"><div class="stat-value" id="totalOrders">-</div><div class="stat-label">Замовлень</div></div>
-            <div class="stat-card"><div class="stat-value" id="totalRevenue">-</div><div class="stat-label">Дохід (₴)</div></div>
-            <div class="stat-card"><div class="stat-value" id="totalUsers">-</div><div class="stat-label">Користувачів</div></div>
-            <div class="stat-card"><div class="stat-value" id="totalSearches">-</div><div class="stat-label">Пошукових запитів</div></div>
-        </div>
-        
-        <div class="charts-grid">
-            <div class="chart-card"><canvas id="ordersChart"></canvas><p style="text-align:center; margin-top:10px;">📊 Динаміка замовлень</p></div>
-            <div class="chart-card"><canvas id="categoriesChart"></canvas><p style="text-align:center; margin-top:10px;">🏷 Популярні категорії</p></div>
-        </div>
-        
-        <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('popular')">⭐ Популярні категорії</button>
-            <button class="tab-btn" onclick="showTab('products')">🏆 Популярні товари</button>
-            <button class="tab-btn" onclick="showTab('searches')">🔍 Пошукові запити</button>
-            <button class="tab-btn" onclick="showTab('orders')">📦 Замовлення</button>
-            <button class="tab-btn" onclick="showTab('users')">👥 Користувачі</button>
-        </div>
-        
-        <div id="popularTab" class="tab-content active">
-            <h3>⭐ ТОП-10 найпопулярніших категорій</h3>
-            <div id="popularCategories"></div>
-        </div>
-        
-        <div id="productsTab" class="tab-content">
-            <h3>🏆 ТОП-20 найпопулярніших товарів</h3>
-            <div id="popularProducts"></div>
-        </div>
-        
-        <div id="searchesTab" class="tab-content">
-            <h3>🔍 Найпопулярніші пошукові запити</h3>
-            <div id="searchesList"></div>
-        </div>
-        
-        <div id="ordersTab" class="tab-content">
-            <button class="export-btn" onclick="exportOrders()"><i class="fas fa-download"></i> Експортувати замовлення (CSV)</button>
-            <div id="ordersList"></div>
-        </div>
-        
-        <div id="usersTab" class="tab-content">
-            <button class="export-btn" onclick="exportUsers()"><i class="fas fa-download"></i> Експортувати користувачів (CSV)</button>
-            <div id="usersList"></div>
+    </div>
+
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <h2><i class="fas fa-lock"></i> Вхід в адмін-панель</h2>
+            <input type="text" id="adminLogin" placeholder="Логін" autocomplete="off">
+            <input type="password" id="adminPassword" placeholder="Пароль">
+            <button onclick="checkAdminLogin()">Увійти</button>
+            <div id="loginError" class="error-msg"></div>
         </div>
     </div>
-    
+
     <script>
+        // Дані для входу (змініть на свої)
+        const ADMIN_LOGIN = 'admin';
+        const ADMIN_PASSWORD = 'Territory2025';
+        
+        function checkAdminLogin() {
+            const login = document.getElementById('adminLogin').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
+                localStorage.setItem('admin_logged_in', 'true');
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                loadAllStats();
+            } else {
+                errorDiv.innerHTML = '❌ Невірний логін або пароль';
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('admin_logged_in');
+            document.getElementById('adminContent').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'flex';
+        }
+        
+        // Перевірка при завантаженні сторінки
+        if (localStorage.getItem('admin_logged_in') === 'true') {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+            loadAllStats();
+        }
+        
         let allProducts = [];
         let allOrders = [];
         let searches = JSON.parse(localStorage.getItem('territory_searches') || '[]');
@@ -119,19 +173,16 @@
         
         async function loadAllStats() {
             try {
-                // Завантажуємо товари
                 const res = await fetch('erc_products.json');
                 const data = await res.json();
                 allProducts = Array.isArray(data) ? data : (data.goods || []);
                 document.getElementById('totalProducts').textContent = allProducts.length.toLocaleString();
                 
-                // Збираємо всі замовлення від усіх користувачів
                 allOrders = [];
                 users.forEach(user => {
                     const userOrders = JSON.parse(localStorage.getItem(`territory_orders_${user.email}`) || '[]');
                     allOrders = allOrders.concat(userOrders);
                 });
-                // Також додаємо замовлення від поточного користувача, якщо він є
                 const currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
                 if (currentUser) {
                     const currentOrders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.email}`) || '[]');
@@ -225,7 +276,7 @@
                 container.innerHTML = '<div class="list-item">📭 Немає зареєстрованих користувачів</div>'; 
                 return; 
             }
-            container.innerHTML = `</table><thead><tr><th>#</th><th>ПІБ</th><th>Email</th><th>Телефон</th><th>Місто</th><th>Адреса</th><th>Дата реєстрації</th></tr></thead><tbody>${users.map((u, idx) => `<tr>
+            container.innerHTML = `<table><thead><tr><th>#</th><th>ПІБ</th><th>Email</th><th>Телефон</th><th>Місто</th><th>Адреса</th><th>Дата реєстрації</th></tr></thead><tbody>${users.map((u, idx) => `<tr>
                 <td>${idx+1}</td>
                 <td>${u.fullName || '—'}</td>
                 <td>${u.email}</td>
@@ -267,7 +318,9 @@
             const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
         }
         
-        loadAllStats();
+        if (localStorage.getItem('admin_logged_in') === 'true') {
+            loadAllStats();
+        }
     </script>
 </body>
 </html>
