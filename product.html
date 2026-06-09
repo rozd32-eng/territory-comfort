@@ -26,6 +26,7 @@
         .in-stock { background: #48bb78; color: white; }
         .low-stock { background: #ed8936; color: white; }
         .out-stock { background: #fc8181; color: white; }
+        .preorder { background: #fbbf24; color: #333; }
         
         .quantity-selector { display: flex; align-items: center; gap: 15px; margin: 20px 0; flex-wrap: wrap; }
         .quantity-selector label { font-weight: 600; }
@@ -36,7 +37,7 @@
         .quantity-input { width: 60px; height: 40px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; }
         
         .buy-btn { padding: 15px 30px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; width: 100%; }
-        .buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .buy-btn.preorder-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #333; }
         
         .specs { background: #f7fafc; border-radius: 16px; padding: 20px; margin-top: 20px; }
         .specs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 15px; }
@@ -59,6 +60,7 @@
         let currentProductData = null;
         let currentQuantity = 1;
         let maxStock = 0;
+        let isPreorder = false;
         
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); }
         if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
@@ -74,21 +76,28 @@
         const urlParams = new URLSearchParams(window.location.search);
         const productCode = urlParams.get('code');
         
-        // Функції для роботи з кількістю
         function updateQuantityDisplay() {
             const input = document.getElementById('quantityInput');
             if (input) input.value = currentQuantity;
             const minusBtn = document.querySelector('.quantity-btn.minus');
             if (minusBtn) minusBtn.disabled = currentQuantity <= 1;
             const plusBtn = document.querySelector('.quantity-btn.plus');
-            if (plusBtn) plusBtn.disabled = currentQuantity >= maxStock;
+            if (plusBtn && maxStock > 0) plusBtn.disabled = currentQuantity >= maxStock;
         }
         
         function changeQuantity(delta) {
-            const newQty = currentQuantity + delta;
-            if (newQty >= 1 && newQty <= maxStock) {
-                currentQuantity = newQty;
-                updateQuantityDisplay();
+            let newQty = currentQuantity + delta;
+            if (maxStock > 0) {
+                if (newQty >= 1 && newQty <= maxStock) {
+                    currentQuantity = newQty;
+                    updateQuantityDisplay();
+                }
+            } else {
+                // Для попереднього замовлення (немає обмежень)
+                if (newQty >= 1) {
+                    currentQuantity = newQty;
+                    updateQuantityDisplay();
+                }
             }
         }
         
@@ -96,12 +105,11 @@
             let qty = parseInt(value);
             if (isNaN(qty)) qty = 1;
             if (qty < 1) qty = 1;
-            if (qty > maxStock) qty = maxStock;
+            if (maxStock > 0 && qty > maxStock) qty = maxStock;
             currentQuantity = qty;
             updateQuantityDisplay();
         }
         
-        // Функція додавання в кошик
         function addToCart() {
             if (!currentProductData) {
                 showToast('❌ Помилка: товар не знайдено');
@@ -110,7 +118,7 @@
             
             const code = currentProductData.code;
             const price = currentProductData.price || currentProductData.sprice || 0;
-            const name = (currentProductData.gname || currentProductData.name || currentProductData.code || 'Без назви').substring(0, 50);
+            const name = (currentProductData.gname || currentProductData.name || currentProductData.code || 'Без назви').substring(0, 120);
             
             let cart = JSON.parse(localStorage.getItem('territory_cart') || '{}');
             
@@ -121,22 +129,11 @@
             }
             
             localStorage.setItem('territory_cart', JSON.stringify(cart));
-            showToast(`✅ Додано ${currentQuantity} шт. на суму ${(price * currentQuantity).toFixed(2)} ₴`);
             
-            // Оновлюємо кількість на складі
-            if (currentQuantity >= maxStock) {
-                maxStock = 0;
-                document.querySelector('.stock').innerHTML = '📦 Немає в наявності';
-                document.querySelector('.stock').className = 'stock out-stock';
-                const buyBtn = document.querySelector('.buy-btn');
-                if (buyBtn) buyBtn.disabled = true;
-                const quantitySelector = document.querySelector('.quantity-selector');
-                if (quantitySelector) quantitySelector.style.display = 'none';
+            if (isPreorder) {
+                showToast(`✅ Товар додано до попереднього замовлення (${currentQuantity} шт). Очікуйте повідомлення!`);
             } else {
-                maxStock -= currentQuantity;
-                const stockSpan = document.querySelector('.stock');
-                if (stockSpan) stockSpan.innerHTML = `📦 ${maxStock} шт`;
-                updateQuantityDisplay();
+                showToast(`✅ Додано ${currentQuantity} шт. на суму ${(price * currentQuantity).toFixed(2)} ₴`);
             }
         }
         
@@ -168,8 +165,26 @@
                 maxStock = stockNum;
                 currentQuantity = 1;
                 
-                const stockClass = stockNum > 5 ? 'in-stock' : (stockNum > 0 ? 'low-stock' : 'out-stock');
-                const stockText = stockNum > 0 ? `${stockNum} шт` : 'Немає в наявності';
+                // Визначаємо статус наявності
+                let stockClass = '';
+                let stockText = '';
+                let isAvailable = false;
+                
+                if (stockNum > 5) {
+                    stockClass = 'in-stock';
+                    stockText = `${stockNum} шт`;
+                    isAvailable = true;
+                } else if (stockNum > 0) {
+                    stockClass = 'low-stock';
+                    stockText = `${stockNum} шт (мало)`;
+                    isAvailable = true;
+                } else {
+                    stockClass = 'preorder';
+                    stockText = 'Немає в наявності (під замовлення)';
+                    isAvailable = false;
+                    isPreorder = true;
+                }
+                
                 const price = product.price || product.sprice || 0;
                 const oldPrice = product.RRP_UAH || 0;
                 const isPromo = oldPrice && price < oldPrice;
@@ -185,21 +200,19 @@
                                 <h1>${productName.substring(0, 150)}</h1>
                                 <div class="code">📋 Код: ${product.code}</div>
                                 <div class="price">${price.toFixed(2)} ₴${isPromo ? `<span class="old-price">${oldPrice.toFixed(2)} ₴</span>` : ''}</div>
-                                <div class="stock ${stockClass}" id="stockDisplay">📦 ${stockText}</div>
+                                <div class="stock ${stockClass}">📦 ${stockText}</div>
                                 
-                                ${stockNum > 0 ? `
-                                <div class="quantity-selector" id="quantitySelector">
+                                <div class="quantity-selector">
                                     <label>Кількість:</label>
                                     <div class="quantity-control">
                                         <button class="quantity-btn minus" id="minusBtn">−</button>
-                                        <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="${stockNum}">
+                                        <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" ${maxStock > 0 ? `max="${maxStock}"` : ''}>
                                         <button class="quantity-btn plus" id="plusBtn">+</button>
                                     </div>
-                                    <span style="color:#666; font-size:14px;">Доступно: ${stockNum} шт</span>
+                                    ${maxStock > 0 ? `<span style="color:#666; font-size:14px;">Доступно: ${maxStock} шт</span>` : '<span style="color:#fbbf24; font-size:14px;">🚚 Під замовлення (термін доставки 7-14 днів)</span>'}
                                 </div>
-                                ` : ''}
                                 
-                                <button class="buy-btn" id="buyBtn" ${stockNum === 0 ? 'disabled' : ''}>🛒 Купити</button>
+                                <button class="buy-btn ${stockNum === 0 ? 'preorder-btn' : ''}" id="buyBtn">${stockNum === 0 ? '📦 Під замовлення' : '🛒 Купити'}</button>
                             </div>
                         </div>
                         
@@ -220,16 +233,11 @@
                     </div>
                 `;
                 
-                // Прив'язуємо події після створення DOM
-                const minusBtn = document.getElementById('minusBtn');
-                const plusBtn = document.getElementById('plusBtn');
-                const quantityInput = document.getElementById('quantityInput');
-                const buyBtn = document.getElementById('buyBtn');
-                
-                if (minusBtn) minusBtn.onclick = () => changeQuantity(-1);
-                if (plusBtn) plusBtn.onclick = () => changeQuantity(1);
-                if (quantityInput) quantityInput.onchange = (e) => setQuantity(e.target.value);
-                if (buyBtn) buyBtn.onclick = () => addToCart();
+                // Прив'язуємо події
+                document.getElementById('minusBtn').onclick = () => changeQuantity(-1);
+                document.getElementById('plusBtn').onclick = () => changeQuantity(1);
+                document.getElementById('quantityInput').onchange = (e) => setQuantity(e.target.value);
+                document.getElementById('buyBtn').onclick = () => addToCart();
                 
                 updateQuantityDisplay();
                 
