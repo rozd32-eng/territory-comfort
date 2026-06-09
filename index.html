@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #f5f7fa; padding: 20px; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; padding: 20px; transition: all 0.3s; }
         body.dark { background: #1a1a2e; color: #eee; }
         body.dark .card, body.dark .filters, body.dark .stats-bar { background: #0f0f1a; color: #eee; border-color: #2a2a3e; }
         
@@ -63,7 +63,7 @@
         <div style="display: flex; gap: 8px; align-items: center;">
             <button class="theme-btn" onclick="toggleTheme()">🌙</button>
             <button class="cart-btn" onclick="openCart()">🛒 Кошик <span id="cartCount" class="cart-count">0</span></button>
-            <button class="auth-btn" id="authBtn" onclick="alert('Авторизація в розробці')">👤 Увійти</button>
+            <button class="auth-btn" id="authBtn" onclick="alert('Авторизація буде додана найближчим часом')">👤 Увійти</button>
         </div>
     </div>
 
@@ -99,7 +99,29 @@
         
         function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
         
-        function openCart() { alert('Кошик буде доступний після авторизації'); }
+        let cart = JSON.parse(localStorage.getItem('territory_cart') || '{}');
+        function updateCartUI() { let c = Object.values(cart).reduce((s,i)=>s+(i.qty||0),0); document.getElementById('cartCount').textContent = c; }
+        function addToCart(code, name, price) {
+            if(cart[code]) cart[code].qty += 1;
+            else cart[code] = { name: name.substring(0,40), price: parseFloat(price), qty: 1 };
+            localStorage.setItem('territory_cart', JSON.stringify(cart));
+            updateCartUI();
+            showToast(`✅ ${name.substring(0,30)} додано за ${price.toFixed(2)} ₴`);
+        }
+        function openCart() {
+            let items = Object.entries(cart);
+            if(items.length === 0) { alert('Кошик порожній'); return; }
+            let msg = '🛒 Ваш кошик:\n';
+            let total = 0;
+            items.forEach(([code, item]) => {
+                msg += `\n${item.name} - ${item.price} ₴ x ${item.qty} = ${(item.price*item.qty).toFixed(2)} ₴`;
+                total += item.price * item.qty;
+            });
+            msg += `\n\n💰 Загалом: ${total.toFixed(2)} ₴`;
+            alert(msg);
+        }
+        
+        updateCartUI();
         
         function getStock(p) { 
             try {
@@ -109,7 +131,6 @@
             } catch(e) { return 0; }
         }
         
-        // Голосовий пошук
         let recognition = null;
         if('webkitSpeechRecognition' in window) { 
             recognition = new webkitSpeechRecognition(); 
@@ -119,12 +140,8 @@
                 applyFilters(); 
             }; 
         }
-        function startVoiceSearch() { 
-            if(recognition) recognition.start(); 
-            else alert('Голосовий пошук не підтримується'); 
-        }
+        function startVoiceSearch() { if(recognition) recognition.start(); else alert('Голосовий пошук не підтримується'); }
         
-        // Фільтри та відображення
         let allProducts = [], filtered = [], currentPage = 1, itemsPerPage = 24;
         
         function applyFilters() {
@@ -137,7 +154,7 @@
             filtered = allProducts.filter(p => {
                 if(vendor && p.vendorId !== vendor) return false;
                 if(category && p.category !== category) return false;
-                if(search && !`${p.name || p.gname || ''} ${p.code || ''} ${p.vendor || ''}`.toLowerCase().includes(search)) return false;
+                if(search && !`${p.gname || ''} ${p.code || ''} ${p.vendor || ''}`.toLowerCase().includes(search)) return false;
                 return true;
             });
             
@@ -163,17 +180,20 @@
             grid.innerHTML = pageItems.map(p => { 
                 let stock = getStock(p);
                 let price = p.price || p.sprice || 0;
+                let promo = p.promoRIC;
+                let oldPrice = p.RRP_UAH || 0;
+                let hasPromo = promo && promo < price;
                 let stockClass = stock > 5 ? 'stock-high' : (stock > 0 ? 'stock-low' : 'stock-out');
                 let stockText = stock > 0 ? `${stock} шт` : 'Немає';
                 let imgUrl = (p.pic && p.pic !== 'null') ? p.pic : 'https://via.placeholder.com/200x200?text=📷';
-                let productName = p.name || p.gname || p.code || 'Без назви';
+                let productName = p.gname || p.code || 'Без назви';
                 return `<div class="card">
                     <div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div>
                     <div class="card-info">
                         <div class="vendor">${p.vendor || ''}</div>
                         <div class="title">${productName.substring(0, 60)}</div>
                         <div class="code">${p.code || ''}</div>
-                        <div><span class="price-current">${price.toFixed(2)}</span></div>
+                        <div>${hasPromo ? `<span class="price-current">${promo.toFixed(2)}</span><span class="price-old">${price.toFixed(2)} ₴</span>` : `<span class="price-current">${price.toFixed(2)}</span>`}</div>
                         <div class="stock ${stockClass}">${stockText}</div>
                         <button class="add-btn" onclick="addToCart('${p.code}','${productName.replace(/'/g,"\\'")}',${price})" ${stock===0?'disabled':''}>🛒 В кошик</button>
                     </div>
@@ -185,10 +205,6 @@
             document.getElementById('prevPage').disabled = currentPage === 1;
             document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
             document.getElementById('pagination').style.display = 'flex';
-        }
-        
-        function addToCart(code, name, price) {
-            showToast(`✅ ${name.substring(0,30)} додано за ${price.toFixed(2)} ₴`);
         }
         
         function nextPage() { let total = Math.ceil(filtered.length / itemsPerPage); if(currentPage < total) { currentPage++; renderProducts(); window.scrollTo({top:0}); } }
