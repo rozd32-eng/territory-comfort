@@ -23,31 +23,34 @@
         .tab-btn.active { background: #38bdf8; color: #fff; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        .order-card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #334155; align-items: center; gap: 10px; }
+        .order-date { color: #94a3b8; font-size: 14px; }
+        .order-total { font-weight: bold; color: #48bb78; font-size: 18px; }
+        .order-status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-new { background: #38bdf8; color: #fff; }
+        .status-processing { background: #fbbf24; color: #000; }
+        .status-shipped { background: #8b5cf6; color: #fff; }
+        .status-completed { background: #48bb78; color: #fff; }
+        .status-cancelled { background: #fc8181; color: #fff; }
+        .order-items { margin-top: 10px; }
+        .order-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; flex-wrap: wrap; gap: 10px; }
+        .order-customer { margin-top: 10px; padding-top: 10px; border-top: 1px solid #334155; font-size: 13px; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 15px; }
         .list-item { background: #1e293b; padding: 12px 15px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .rank { font-weight: bold; color: #38bdf8; width: 40px; }
         .name { flex: 2; }
         .count { color: #48bb78; font-weight: bold; }
-        .export-btn { background: #38bdf8; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin: 10px 0; }
-        .refresh-btn { background: #48bb78; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-left: 10px; }
-        .order-card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #334155; }
-        .order-date { color: #94a3b8; font-size: 14px; }
-        .order-total { font-weight: bold; color: #48bb78; font-size: 18px; }
-        .order-status { background: #38bdf8; padding: 2px 10px; border-radius: 20px; font-size: 12px; }
-        .order-status.new { background: #38bdf8; }
-        .order-status.processing { background: #fbbf24; color: #000; }
-        .order-status.completed { background: #48bb78; }
-        .order-items { margin-top: 10px; }
-        .order-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; flex-wrap: wrap; gap: 10px; }
-        
+        .export-btn, .action-btn { background: #38bdf8; color: #fff; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; margin: 5px; }
+        .action-btn.delete { background: #fc8181; }
+        .action-btn.edit { background: #48bb78; }
+        select { background: #1e293b; color: #fff; border: 1px solid #334155; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
+        .user-card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; }
         .login-box { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; }
         .login-box h2 { margin-bottom: 20px; color: #38bdf8; }
         .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #fff; font-size: 16px; }
         .login-box button { width: 100%; padding: 12px; background: #38bdf8; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
-        .login-box button:hover { background: #0284c7; }
         .error-msg { color: #fc8181; margin-top: 10px; font-size: 14px; }
-        select { background: #1e293b; color: #fff; border: 1px solid #334155; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
         @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -68,7 +71,8 @@
                 <h1><i class="fas fa-chart-line"></i> Адмін панель Territory Comfort</h1>
                 <div>
                     <button class="export-btn" onclick="exportAllData()"><i class="fas fa-download"></i> Експортувати всі дані</button>
-                    <button class="refresh-btn" onclick="loadAllStats()"><i class="fas fa-sync-alt"></i> Оновити</button>
+                    <button class="export-btn" onclick="loadAllStats()"><i class="fas fa-sync-alt"></i> Оновити</button>
+                    <button class="export-btn" onclick="showAddManagerModal()"><i class="fas fa-user-plus"></i> Додати менеджера</button>
                     <button class="export-btn" onclick="logout()" style="background:#fc8181;"><i class="fas fa-sign-out-alt"></i> Вийти</button>
                     <a href="index.html" style="color:#38bdf8; margin-left:15px;"><i class="fas fa-store"></i> На сайт</a>
                 </div>
@@ -79,6 +83,7 @@
                 <div class="stat-card"><div class="stat-value" id="totalOrders">-</div><div class="stat-label">Замовлень</div></div>
                 <div class="stat-card"><div class="stat-value" id="totalRevenue">-</div><div class="stat-label">Дохід (₴)</div></div>
                 <div class="stat-card"><div class="stat-value" id="totalUsers">-</div><div class="stat-label">Користувачів</div></div>
+                <div class="stat-card"><div class="stat-value" id="totalManagers">-</div><div class="stat-label">Менеджерів</div></div>
                 <div class="stat-card"><div class="stat-value" id="totalSearches">-</div><div class="stat-label">Пошукових запитів</div></div>
             </div>
             
@@ -90,19 +95,22 @@
             <div class="tabs">
                 <button class="tab-btn active" onclick="showTab('orders')">📦 Замовлення</button>
                 <button class="tab-btn" onclick="showTab('users')">👥 Користувачі</button>
+                <button class="tab-btn" onclick="showTab('managers')">👔 Менеджери</button>
                 <button class="tab-btn" onclick="showTab('searches')">🔍 Пошукові запити</button>
                 <button class="tab-btn" onclick="showTab('popular')">⭐ Популярні категорії</button>
                 <button class="tab-btn" onclick="showTab('products')">🏆 Популярні товари</button>
             </div>
             
             <div id="ordersTab" class="tab-content active">
-                <button class="export-btn" onclick="exportOrders()"><i class="fas fa-download"></i> Експортувати замовлення (CSV)</button>
                 <div id="ordersList"></div>
             </div>
             
             <div id="usersTab" class="tab-content">
-                <button class="export-btn" onclick="exportUsers()"><i class="fas fa-download"></i> Експортувати користувачів (CSV)</button>
                 <div id="usersList"></div>
+            </div>
+            
+            <div id="managersTab" class="tab-content">
+                <div id="managersList"></div>
             </div>
             
             <div id="searchesTab" class="tab-content">
@@ -122,17 +130,35 @@
         </div>
     </div>
 
+    <!-- Модальне вікно для додавання менеджера -->
+    <div id="addManagerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; justify-content:center; align-items:center;">
+        <div style="background:#1e293b; border-radius:20px; padding:30px; width:90%; max-width:400px;">
+            <h3 style="margin-bottom:20px;">Додати менеджера</h3>
+            <input type="text" id="managerLogin" placeholder="Логін" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
+            <input type="password" id="managerPassword" placeholder="Пароль" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff;">
+            <select id="managerRole" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; background:#0f172a; color:#fff;">
+                <option value="manager">Менеджер</option>
+                <option value="admin">Адміністратор</option>
+            </select>
+            <button onclick="addManager()" style="width:100%; padding:10px; background:#38bdf8; color:#fff; border:none; border-radius:8px; cursor:pointer;">Додати</button>
+            <button onclick="closeAddManagerModal()" style="width:100%; margin-top:10px; padding:10px; background:#fc8181; color:#fff; border:none; border-radius:8px; cursor:pointer;">Скасувати</button>
+        </div>
+    </div>
+
     <script>
-        const ADMIN_LOGIN = 'admin';
-        const ADMIN_PASSWORD = 'Territory2025';
+        // Дані для входу (головний адмін)
+        let managers = JSON.parse(localStorage.getItem('territory_managers') || '[{"login":"admin","password":"Territory2025","role":"admin","name":"Головний адміністратор"}]');
+        let currentManager = null;
         
         function checkAdminLogin() {
             const login = document.getElementById('adminLogin').value.trim();
             const password = document.getElementById('adminPassword').value;
             const errorDiv = document.getElementById('loginError');
             
-            if (login === ADMIN_LOGIN && password === ADMIN_PASSWORD) {
-                localStorage.setItem('admin_logged_in', 'true');
+            const manager = managers.find(m => m.login === login && m.password === password);
+            if (manager) {
+                currentManager = manager;
+                localStorage.setItem('current_manager', JSON.stringify(currentManager));
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('adminContent').style.display = 'block';
                 loadAllStats();
@@ -142,14 +168,89 @@
         }
         
         function logout() {
-            localStorage.removeItem('admin_logged_in');
+            localStorage.removeItem('current_manager');
+            currentManager = null;
             document.getElementById('adminContent').style.display = 'none';
             document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('adminLogin').value = '';
+            document.getElementById('adminPassword').value = '';
         }
         
-        if (localStorage.getItem('admin_logged_in') === 'true') {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('adminContent').style.display = 'block';
+        function showAddManagerModal() {
+            if (currentManager?.role !== 'admin') {
+                alert('Тільки адміністратор може додавати менеджерів');
+                return;
+            }
+            document.getElementById('addManagerModal').style.display = 'flex';
+        }
+        
+        function closeAddManagerModal() {
+            document.getElementById('addManagerModal').style.display = 'none';
+        }
+        
+        function addManager() {
+            const login = document.getElementById('managerLogin').value.trim();
+            const password = document.getElementById('managerPassword').value;
+            const role = document.getElementById('managerRole').value;
+            
+            if (!login || !password) {
+                alert('Заповніть всі поля');
+                return;
+            }
+            if (managers.find(m => m.login === login)) {
+                alert('Менеджер з таким логіном вже існує');
+                return;
+            }
+            managers.push({ login, password, role, name: login, createdAt: new Date().toISOString() });
+            localStorage.setItem('territory_managers', JSON.stringify(managers));
+            closeAddManagerModal();
+            loadAllStats();
+            alert('✅ Менеджера додано');
+        }
+        
+        function deleteManager(login) {
+            if (login === 'admin') {
+                alert('Не можна видалити головного адміністратора');
+                return;
+            }
+            if (confirm(`Видалити менеджера ${login}?`)) {
+                managers = managers.filter(m => m.login !== login);
+                localStorage.setItem('territory_managers', JSON.stringify(managers));
+                loadAllStats();
+                alert('✅ Менеджера видалено');
+            }
+        }
+        
+        function updateOrderStatus(orderId, newStatus) {
+            let allOrders = JSON.parse(localStorage.getItem('territory_all_orders') || '[]');
+            allOrders = allOrders.map(order => {
+                if (order.id == orderId) {
+                    order.status = newStatus;
+                    order.manager = currentManager?.login;
+                    order.statusDate = new Date().toISOString();
+                }
+                return order;
+            });
+            localStorage.setItem('territory_all_orders', JSON.stringify(allOrders));
+            renderOrders();
+            showToast('Статус замовлення оновлено');
+        }
+        
+        function showToast(msg) {
+            let t = document.createElement('div');
+            t.style.cssText = 'position:fixed; bottom:30px; right:30px; background:#48bb78; color:white; padding:10px 20px; border-radius:10px; z-index:3000;';
+            t.innerHTML = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2000);
+        }
+        
+        if (localStorage.getItem('current_manager')) {
+            const saved = JSON.parse(localStorage.getItem('current_manager'));
+            if (managers.find(m => m.login === saved.login)) {
+                currentManager = saved;
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+            }
         }
         
         let allProducts = [];
@@ -164,20 +265,10 @@
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             if (tab === 'orders') { document.getElementById('ordersTab').classList.add('active'); event.target.classList.add('active'); }
             if (tab === 'users') { document.getElementById('usersTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'managers') { document.getElementById('managersTab').classList.add('active'); event.target.classList.add('active'); }
             if (tab === 'searches') { document.getElementById('searchesTab').classList.add('active'); event.target.classList.add('active'); }
             if (tab === 'popular') { document.getElementById('popularTab').classList.add('active'); event.target.classList.add('active'); }
             if (tab === 'products') { document.getElementById('productsTab').classList.add('active'); event.target.classList.add('active'); }
-        }
-        
-        function updateOrderStatus(orderId, newStatus) {
-            allOrders = allOrders.map(order => {
-                if (order.id == orderId) {
-                    order.status = newStatus;
-                }
-                return order;
-            });
-            localStorage.setItem('territory_all_orders', JSON.stringify(allOrders));
-            renderOrders();
         }
         
         async function loadAllStats() {
@@ -187,7 +278,6 @@
                 allProducts = Array.isArray(data) ? data : (data.goods || []);
                 document.getElementById('totalProducts').textContent = allProducts.length.toLocaleString();
                 
-                // Завантажуємо замовлення із загального сховища
                 allOrders = JSON.parse(localStorage.getItem('territory_all_orders') || '[]');
                 allOrders.sort((a,b) => new Date(b.date) - new Date(a.date));
                 
@@ -195,6 +285,7 @@
                 document.getElementById('totalOrders').textContent = allOrders.length;
                 document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(0).toLocaleString();
                 document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('totalManagers').textContent = managers.length;
                 document.getElementById('totalSearches').textContent = searches.length;
                 
                 renderOrdersChart();
@@ -204,6 +295,7 @@
                 renderSearches();
                 renderOrders();
                 renderUsers();
+                renderManagers();
             } catch(e) { console.error(e); }
         }
         
@@ -249,31 +341,34 @@
         
         function renderOrders() {
             const container = document.getElementById('ordersList');
-            if (allOrders.length === 0) { 
-                container.innerHTML = '<div class="list-item">📭 Немає замовлень</div>'; 
-                return; 
-            }
+            if (allOrders.length === 0) { container.innerHTML = '<div class="list-item">📭 Немає замовлень</div>'; return; }
+            
+            const statusOptions = [
+                { value: 'new', label: '🆕 Нове', class: 'status-new' },
+                { value: 'processing', label: '⚙️ В обробці', class: 'status-processing' },
+                { value: 'shipped', label: '🚚 Відправлено', class: 'status-shipped' },
+                { value: 'completed', label: '✅ Виконано', class: 'status-completed' },
+                { value: 'cancelled', label: '❌ Скасовано', class: 'status-cancelled' }
+            ];
+            
             container.innerHTML = allOrders.map(order => `
                 <div class="order-card">
                     <div class="order-header">
                         <span class="order-date">📅 ${new Date(order.date).toLocaleString()}</span>
                         <span class="order-total">💰 ${order.total} ₴</span>
-                        <select onchange="updateOrderStatus(${order.id}, this.value)" class="order-status ${order.status || 'new'}">
-                            <option value="new" ${(order.status || 'new') === 'new' ? 'selected' : ''}>🆕 Нове</option>
-                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>⚙️ В обробці</option>
-                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✅ Виконано</option>
+                        <select onchange="updateOrderStatus(${order.id}, this.value)" class="order-status ${statusOptions.find(s => s.value === (order.status || 'new'))?.class}">
+                            ${statusOptions.map(opt => `<option value="${opt.value}" ${(order.status || 'new') === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
                         </select>
                     </div>
                     <div class="order-items">
-                        ${order.items.map(item => `
-                            <div class="order-item">
-                                <span>${item.name}</span>
-                                <span>${item.qty} шт × ${item.price.toFixed(2)} ₴ = ${(item.price * item.qty).toFixed(2)} ₴</span>
-                            </div>
-                        `).join('')}
+                        ${order.items.map(item => `<div class="order-item"><span>${item.name}</span><span>${item.qty} шт × ${item.price.toFixed(2)} ₴ = ${(item.price * item.qty).toFixed(2)} ₴</span></div>`).join('')}
                     </div>
-                    <div style="margin-top: 10px; font-size: 12px; color: #94a3b8;">
-                        👤 ${order.customer || 'Гість'} | 📞 ${order.phone || '—'} | 📧 ${order.email || '—'}
+                    <div class="order-customer">
+                        <span>👤 ${order.customer || 'Гість'}</span>
+                        <span>📞 ${order.phone || '—'}</span>
+                        <span>📧 ${order.email || '—'}</span>
+                        ${order.manager ? `<span>👔 Обробляє: ${order.manager}</span>` : ''}
+                        ${order.statusDate ? `<span>📅 Статус оновлено: ${new Date(order.statusDate).toLocaleString()}</span>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -281,55 +376,37 @@
         
         function renderUsers() {
             const container = document.getElementById('usersList');
-            if (users.length === 0) { 
-                container.innerHTML = '<div class="list-item">📭 Немає зареєстрованих користувачів</div>'; 
-                return; 
-            }
-            container.innerHTML = `<table><thead><tr><th>#</th><th>ПІБ</th><th>Email</th><th>Телефон</th><th>Місто</th><th>Адреса</th><th>Дата реєстрації</th></tr></thead><tbody>${users.map((u, idx) => `<tr>
-                <td>${idx+1}</td>
-                <td>${u.fullName || '—'}</td>
-                <td>${u.email}</td>
-                <td>${u.phone || '—'}</td>
-                <td>${u.city || '—'}</td>
-                <td>${u.address || '—'}</td>
-                <td>${new Date(u.registeredAt).toLocaleDateString()}</td>
-            </tr>`).join('')}</tbody></table>`;
+            if (users.length === 0) { container.innerHTML = '<div class="list-item">📭 Немає зареєстрованих користувачів</div>'; return; }
+            container.innerHTML = users.map((u, idx) => `
+                <div class="user-card">
+                    <div><strong>${u.fullName || '—'}</strong><br><small>${u.email}</small></div>
+                    <div>📞 ${u.phone || '—'}<br>📍 ${u.city || '—'}</div>
+                    <div>📅 ${new Date(u.registeredAt).toLocaleDateString()}</div>
+                </div>
+            `).join('');
         }
         
-        function exportOrders() {
-            if (allOrders.length === 0) { alert('Немає замовлень'); return; }
-            let csv = "ID,Дата,Клієнт,Телефон,Email,Сума,Статус,Товари\n";
-            allOrders.forEach(o => { 
-                const items = o.items.map(i => `${i.name} x${i.qty}`).join('; ');
-                csv += `${o.id},${o.date},${o.customer || 'Гість'},${o.phone || ''},${o.email || ''},${o.total},${o.status || 'new'},"${items}"\n`; 
-            });
-            downloadCSV(csv, `orders_${new Date().toISOString().slice(0,19)}.csv`);
-        }
-        
-        function exportUsers() {
-            if (users.length === 0) { alert('Немає користувачів'); return; }
-            let csv = "ПІБ,Email,Телефон,Місто,Адреса,Дата реєстрації\n";
-            users.forEach(u => { csv += `"${u.fullName || ''}",${u.email},"${u.phone || ''}","${u.city || ''}","${u.address || ''}",${u.registeredAt}\n`; });
-            downloadCSV(csv, `users_${new Date().toISOString().slice(0,19)}.csv`);
+        function renderManagers() {
+            const container = document.getElementById('managersList');
+            if (managers.length === 0) { container.innerHTML = '<div class="list-item">📭 Немає менеджерів</div>'; return; }
+            container.innerHTML = managers.map(m => `
+                <div class="user-card">
+                    <div><strong>${m.name || m.login}</strong><br><small>${m.login}</small><br>👔 ${m.role === 'admin' ? 'Адміністратор' : 'Менеджер'}</div>
+                    <div>📅 ${new Date(m.createdAt).toLocaleDateString() || '—'}</div>
+                    ${currentManager?.role === 'admin' && m.login !== 'admin' ? `<button class="action-btn delete" onclick="deleteManager('${m.login}')">🗑 Видалити</button>` : ''}
+                </div>
+            `).join('');
         }
         
         function exportAllData() {
-            const allData = { orders: allOrders, users, searches, views, categoryViews, productsCount: allProducts.length };
+            const allData = { orders: allOrders, users, managers, searches, views, categoryViews, productsCount: allProducts.length };
             const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = `territory_comfort_export_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(url);
             alert('✅ Всі дані експортовано в JSON');
         }
         
-        function downloadCSV(csv, filename) {
-            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-        }
-        
-        if (localStorage.getItem('admin_logged_in') === 'true') {
-            loadAllStats();
-        }
+        if (currentManager) loadAllStats();
     </script>
 </body>
 </html>
