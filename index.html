@@ -100,91 +100,68 @@
     </footer>
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyAgEV-Hzt5RW54isNoTmEQPqyUY_ndbb84",
-            authDomain: "territory-comfort.firebaseapp.com",
-            projectId: "territory-comfort",
-            storageBucket: "territory-comfort.firebasestorage.app",
-            messagingSenderId: "935081538509",
-            appId: "1:935081538509:web:cd487e097352c98bd4ca84"
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-        
-        // Робимо функції глобальними
-        window.googleSignIn = () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-                    localStorage.setItem('territory_current_user', JSON.stringify({
-                        uid: user.uid,
-                        email: user.email,
-                        fullName: user.displayName,
-                        photoURL: user.photoURL
-                    }));
-                    window.location.reload();
-                })
-                .catch((error) => {
-                    console.error('Google auth error:', error);
-                    alert('Помилка входу: ' + error.message);
-                });
-        };
-        
-        window.logout = () => {
-            signOut(auth).then(() => {
-                localStorage.removeItem('territory_current_user');
-                window.location.reload();
-            });
-        };
-        
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                localStorage.setItem('territory_current_user', JSON.stringify({
-                    uid: user.uid,
-                    email: user.email,
-                    fullName: user.displayName,
-                    photoURL: user.photoURL
-                }));
-            }
-        });
-    </script>
-
     <script>
-        // Firebase auth state
+        // Проста авторизація через localStorage (без Firebase для тесту)
         let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
+        
+        // Демо-користувачі для тесту
+        const demoUsers = [
+            { email: 'demo@territory.com', password: 'demo123', fullName: 'Демо Користувач' }
+        ];
         
         function updateAuthUI() {
             const container = document.getElementById('authContainer');
             if (currentUser) {
                 container.innerHTML = `<div class="profile-info">
-                    ${currentUser.photoURL ? `<img src="${currentUser.photoURL}" class="profile-img">` : '<i class="fas fa-user-circle"></i>'}
+                    <i class="fas fa-user-circle"></i>
                     <span>${currentUser.fullName || currentUser.email.split('@')[0]}</span>
                     <button class="auth-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Вихід</button>
                 </div>`;
             } else {
-                container.innerHTML = `<button class="auth-btn google-btn" onclick="googleSignIn()">
-                    <img src="https://www.google.com/favicon.ico"> Увійти через Google
+                container.innerHTML = `<button class="auth-btn" onclick="showLoginModal()">
+                    <i class="fas fa-user"></i> Увійти / Зареєструватися
                 </button>`;
             }
         }
         
-        // Оновлюємо UI при зміні користувача
-        setInterval(() => {
-            const newUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
-            if (JSON.stringify(newUser) !== JSON.stringify(currentUser)) {
-                currentUser = newUser;
+        function showLoginModal() {
+            const email = prompt('Введіть email (для тесту: demo@territory.com):');
+            if (!email) return;
+            const password = prompt('Введіть пароль (для тесту: demo123):');
+            if (!password) return;
+            
+            const user = demoUsers.find(u => u.email === email && u.password === password);
+            if (user) {
+                currentUser = { uid: 'demo123', email: user.email, fullName: user.fullName };
+                localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
                 updateAuthUI();
-                cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser?.uid || 'guest'}`) || '{}');
+                // Оновлюємо кошик
+                cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser.uid}`) || '{}');
                 updateCartUI();
+                alert('✅ Вхід виконано успішно!');
+            } else if (email && password) {
+                // Автоматична реєстрація
+                const newUser = { uid: Date.now().toString(), email: email, fullName: email.split('@')[0] };
+                demoUsers.push({ email: email, password: password, fullName: email.split('@')[0] });
+                currentUser = newUser;
+                localStorage.setItem('territory_current_user', JSON.stringify(currentUser));
+                updateAuthUI();
+                cart = {};
+                saveCart();
+                alert('✅ Реєстрація виконана успішно!');
+            } else {
+                alert('❌ Невірний email або пароль');
             }
-        }, 500);
+        }
+        
+        window.logout = () => {
+            currentUser = null;
+            localStorage.removeItem('territory_current_user');
+            updateAuthUI();
+            cart = {};
+            updateCartUI();
+            alert('👋 Ви вийшли з акаунту');
+        };
         
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); }
         if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
@@ -199,7 +176,7 @@
             updateCartUI();
         }
         function addToCart(code, name, price) {
-            if(!currentUser) { showToast('🔐 Увійдіть в акаунт'); return; }
+            if(!currentUser) { showToast('🔐 Увійдіть в акаунт'); showLoginModal(); return; }
             if(cart[code]) cart[code].qty += 1;
             else cart[code] = { name: name.substring(0,40), price: parseFloat(price), qty: 1 };
             saveCart();
