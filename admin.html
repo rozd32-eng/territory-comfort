@@ -26,12 +26,18 @@
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
         th { background: #1e293b; color: #38bdf8; }
-        .list-item { background: #1e293b; padding: 12px 15px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .list-item { background: #1e293b; padding: 12px 15px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .rank { font-weight: bold; color: #38bdf8; width: 40px; }
         .name { flex: 2; }
         .count { color: #48bb78; font-weight: bold; }
         .export-btn { background: #38bdf8; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin: 10px 0; }
         .refresh-btn { background: #48bb78; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-left: 10px; }
+        .order-card { background: #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #334155; }
+        .order-date { color: #94a3b8; font-size: 14px; }
+        .order-total { font-weight: bold; color: #48bb78; font-size: 18px; }
+        .order-items { margin-top: 10px; }
+        .order-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; flex-wrap: wrap; gap: 10px; }
         @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -40,7 +46,7 @@
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Адмін панель Territory Comfort</h1>
             <div>
-                <button class="export-btn" onclick="exportAllData()"><i class="fas fa-download"></i> Експортувати всі дані (CSV)</button>
+                <button class="export-btn" onclick="exportAllData()"><i class="fas fa-download"></i> Експортувати всі дані</button>
                 <button class="refresh-btn" onclick="loadAllStats()"><i class="fas fa-sync-alt"></i> Оновити</button>
                 <a href="index.html" style="color:#38bdf8; margin-left:15px;"><i class="fas fa-store"></i> На сайт</a>
             </div>
@@ -95,7 +101,7 @@
     
     <script>
         let allProducts = [];
-        let orders = JSON.parse(localStorage.getItem('territory_orders') || '[]');
+        let allOrders = [];
         let searches = JSON.parse(localStorage.getItem('territory_searches') || '[]');
         let views = JSON.parse(localStorage.getItem('territory_views') || '{}');
         let categoryViews = JSON.parse(localStorage.getItem('territory_category_views') || '{}');
@@ -113,13 +119,28 @@
         
         async function loadAllStats() {
             try {
+                // Завантажуємо товари
                 const res = await fetch('erc_products.json');
                 const data = await res.json();
                 allProducts = Array.isArray(data) ? data : (data.goods || []);
                 document.getElementById('totalProducts').textContent = allProducts.length.toLocaleString();
                 
-                let totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total), 0);
-                document.getElementById('totalOrders').textContent = orders.length;
+                // Збираємо всі замовлення від усіх користувачів
+                allOrders = [];
+                users.forEach(user => {
+                    const userOrders = JSON.parse(localStorage.getItem(`territory_orders_${user.email}`) || '[]');
+                    allOrders = allOrders.concat(userOrders);
+                });
+                // Також додаємо замовлення від поточного користувача, якщо він є
+                const currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
+                if (currentUser) {
+                    const currentOrders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.email}`) || '[]');
+                    allOrders = allOrders.concat(currentOrders);
+                }
+                allOrders.sort((a,b) => new Date(b.date) - new Date(a.date));
+                
+                const totalRevenue = allOrders.reduce((sum, o) => sum + parseFloat(o.total), 0);
+                document.getElementById('totalOrders').textContent = allOrders.length;
                 document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(0).toLocaleString();
                 document.getElementById('totalUsers').textContent = users.length;
                 document.getElementById('totalSearches').textContent = searches.length;
@@ -136,7 +157,7 @@
         
         function renderOrdersChart() {
             const last7Days = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate() - i); return d.toISOString().slice(0,10); }).reverse();
-            const ordersByDay = last7Days.map(day => orders.filter(o => o.date?.slice(0,10) === day).length);
+            const ordersByDay = last7Days.map(day => allOrders.filter(o => o.date?.slice(0,10) === day).length);
             new Chart(document.getElementById('ordersChart'), { 
                 type: 'line', 
                 data: { labels: last7Days, datasets: [{ label: 'Замовлення', data: ordersByDay, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', fill: true, tension: 0.3 }] }, 
@@ -175,19 +196,53 @@
         }
         
         function renderOrders() {
-            if (orders.length === 0) { document.getElementById('ordersList').innerHTML = '<div class="list-item">📭 Немає замовлень</div>'; return; }
-            document.getElementById('ordersList').innerHTML = `<table><thead><tr><th>ID</th><th>Дата</th><th>Клієнт</th><th>Телефон</th><th>Місто</th><th>Сума</th><th>Товари</th></tr></thead><tbody>${orders.slice(0, 50).map(o => `<tr><td>${o.id}</td><td>${new Date(o.date).toLocaleString()}</td><td>${o.customer}</td><td>${o.phone}</td><td>${o.city || '—'}</td><td>${o.total} ₴</td><td>${o.items.map(i => `${i.name} x${i.qty}`).join(', ')}</td></tr>`).join('')}</tbody></table>`;
+            const container = document.getElementById('ordersList');
+            if (allOrders.length === 0) { 
+                container.innerHTML = '<div class="list-item">📭 Немає замовлень</div>'; 
+                return; 
+            }
+            container.innerHTML = allOrders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-date">📅 ${new Date(order.date).toLocaleString()}</span>
+                        <span class="order-total">💰 ${order.total} ₴</span>
+                    </div>
+                    <div class="order-items">
+                        ${order.items.map(item => `
+                            <div class="order-item">
+                                <span>${item.name}</span>
+                                <span>${item.qty} шт × ${item.price.toFixed(2)} ₴ = ${(item.price * item.qty).toFixed(2)} ₴</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
         }
         
         function renderUsers() {
-            if (users.length === 0) { document.getElementById('usersList').innerHTML = '<div class="list-item">📭 Немає зареєстрованих користувачів</div>'; return; }
-            document.getElementById('usersList').innerHTML = `<table><thead><tr><th>#</th><th>ПІБ</th><th>Email</th><th>Телефон</th><th>Місто</th><th>Адреса</th><th>Дата реєстрації</th></tr></thead><tbody>${users.map((u, idx) => `<tr><td>${idx+1}</td><td>${u.fullName || '—'}</td><td>${u.email}</td><td>${u.phone || '—'}</td><td>${u.city || '—'}</td><td>${u.address || '—'}</td><td>${new Date(u.registeredAt).toLocaleDateString()}</td></tr>`).join('')}</tbody></table>`;
+            const container = document.getElementById('usersList');
+            if (users.length === 0) { 
+                container.innerHTML = '<div class="list-item">📭 Немає зареєстрованих користувачів</div>'; 
+                return; 
+            }
+            container.innerHTML = `</table><thead><tr><th>#</th><th>ПІБ</th><th>Email</th><th>Телефон</th><th>Місто</th><th>Адреса</th><th>Дата реєстрації</th></tr></thead><tbody>${users.map((u, idx) => `<tr>
+                <td>${idx+1}</td>
+                <td>${u.fullName || '—'}</td>
+                <td>${u.email}</td>
+                <td>${u.phone || '—'}</td>
+                <td>${u.city || '—'}</td>
+                <td>${u.address || '—'}</td>
+                <td>${new Date(u.registeredAt).toLocaleDateString()}</td>
+            </tr>`).join('')}</tbody></table>`;
         }
         
         function exportOrders() {
-            if (orders.length === 0) { alert('Немає замовлень'); return; }
+            if (allOrders.length === 0) { alert('Немає замовлень'); return; }
             let csv = "ID,Дата,Клієнт,Телефон,Місто,Сума,Товари\n";
-            orders.forEach(o => { csv += `${o.id},${o.date},${o.customer},${o.phone},${o.city || ''},${o.total},"${o.items.map(i => `${i.name} x${i.qty}`).join('; ')}"\n`; });
+            allOrders.forEach(o => { 
+                const items = o.items.map(i => `${i.name} x${i.qty}`).join('; ');
+                csv += `${o.id},${o.date},${o.customer || 'Гість'},${o.phone || ''},${o.city || ''},${o.total},"${items}"\n`; 
+            });
             downloadCSV(csv, `orders_${new Date().toISOString().slice(0,19)}.csv`);
         }
         
@@ -199,7 +254,7 @@
         }
         
         function exportAllData() {
-            const allData = { orders, users, searches, views, categoryViews, productsCount: allProducts.length };
+            const allData = { orders: allOrders, users, searches, views, categoryViews, productsCount: allProducts.length };
             const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = `territory_comfort_export_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(url);
@@ -208,7 +263,8 @@
         
         function downloadCSV(csv, filename) {
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
         }
         
         loadAllStats();
