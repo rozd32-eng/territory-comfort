@@ -23,9 +23,6 @@
         .tab-btn.active { background: #38bdf8; color: #fff; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
-        th { background: #1e293b; color: #38bdf8; }
         .list-item { background: #1e293b; padding: 12px 15px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .rank { font-weight: bold; color: #38bdf8; width: 40px; }
         .name { flex: 2; }
@@ -36,6 +33,10 @@
         .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #334155; }
         .order-date { color: #94a3b8; font-size: 14px; }
         .order-total { font-weight: bold; color: #48bb78; font-size: 18px; }
+        .order-status { background: #38bdf8; padding: 2px 10px; border-radius: 20px; font-size: 12px; }
+        .order-status.new { background: #38bdf8; }
+        .order-status.processing { background: #fbbf24; color: #000; }
+        .order-status.completed { background: #48bb78; }
         .order-items { margin-top: 10px; }
         .order-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; flex-wrap: wrap; gap: 10px; }
         
@@ -46,6 +47,7 @@
         .login-box button { width: 100%; padding: 12px; background: #38bdf8; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
         .login-box button:hover { background: #0284c7; }
         .error-msg { color: #fc8181; margin-top: 10px; font-size: 14px; }
+        select { background: #1e293b; color: #fff; border: 1px solid #334155; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
         @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -86,29 +88,14 @@
             </div>
             
             <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('popular')">⭐ Популярні категорії</button>
-                <button class="tab-btn" onclick="showTab('products')">🏆 Популярні товари</button>
-                <button class="tab-btn" onclick="showTab('searches')">🔍 Пошукові запити</button>
-                <button class="tab-btn" onclick="showTab('orders')">📦 Замовлення</button>
+                <button class="tab-btn active" onclick="showTab('orders')">📦 Замовлення</button>
                 <button class="tab-btn" onclick="showTab('users')">👥 Користувачі</button>
+                <button class="tab-btn" onclick="showTab('searches')">🔍 Пошукові запити</button>
+                <button class="tab-btn" onclick="showTab('popular')">⭐ Популярні категорії</button>
+                <button class="tab-btn" onclick="showTab('products')">🏆 Популярні товари</button>
             </div>
             
-            <div id="popularTab" class="tab-content active">
-                <h3>⭐ ТОП-10 найпопулярніших категорій</h3>
-                <div id="popularCategories"></div>
-            </div>
-            
-            <div id="productsTab" class="tab-content">
-                <h3>🏆 ТОП-20 найпопулярніших товарів</h3>
-                <div id="popularProducts"></div>
-            </div>
-            
-            <div id="searchesTab" class="tab-content">
-                <h3>🔍 Найпопулярніші пошукові запити</h3>
-                <div id="searchesList"></div>
-            </div>
-            
-            <div id="ordersTab" class="tab-content">
+            <div id="ordersTab" class="tab-content active">
                 <button class="export-btn" onclick="exportOrders()"><i class="fas fa-download"></i> Експортувати замовлення (CSV)</button>
                 <div id="ordersList"></div>
             </div>
@@ -117,11 +104,25 @@
                 <button class="export-btn" onclick="exportUsers()"><i class="fas fa-download"></i> Експортувати користувачів (CSV)</button>
                 <div id="usersList"></div>
             </div>
+            
+            <div id="searchesTab" class="tab-content">
+                <h3>🔍 Пошукові запити</h3>
+                <div id="searchesList"></div>
+            </div>
+            
+            <div id="popularTab" class="tab-content">
+                <h3>⭐ ТОП-10 найпопулярніших категорій</h3>
+                <div id="popularCategories"></div>
+            </div>
+            
+            <div id="productsTab" class="tab-content">
+                <h3>🏆 ТОП-20 найпопулярніших товарів</h3>
+                <div id="popularProducts"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Дані для входу (змініть на свої)
         const ADMIN_LOGIN = 'admin';
         const ADMIN_PASSWORD = 'Territory2025';
         
@@ -144,15 +145,11 @@
             localStorage.removeItem('admin_logged_in');
             document.getElementById('adminContent').style.display = 'none';
             document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('adminLogin').value = '';
-            document.getElementById('adminPassword').value = '';
         }
         
-        // Перевірка при завантаженні сторінки
         if (localStorage.getItem('admin_logged_in') === 'true') {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('adminContent').style.display = 'block';
-            loadAllStats();
         }
         
         let allProducts = [];
@@ -165,11 +162,22 @@
         function showTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            if (tab === 'popular') { document.getElementById('popularTab').classList.add('active'); event.target.classList.add('active'); }
-            if (tab === 'products') { document.getElementById('productsTab').classList.add('active'); event.target.classList.add('active'); }
-            if (tab === 'searches') { document.getElementById('searchesTab').classList.add('active'); event.target.classList.add('active'); }
             if (tab === 'orders') { document.getElementById('ordersTab').classList.add('active'); event.target.classList.add('active'); }
             if (tab === 'users') { document.getElementById('usersTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'searches') { document.getElementById('searchesTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'popular') { document.getElementById('popularTab').classList.add('active'); event.target.classList.add('active'); }
+            if (tab === 'products') { document.getElementById('productsTab').classList.add('active'); event.target.classList.add('active'); }
+        }
+        
+        function updateOrderStatus(orderId, newStatus) {
+            allOrders = allOrders.map(order => {
+                if (order.id == orderId) {
+                    order.status = newStatus;
+                }
+                return order;
+            });
+            localStorage.setItem('territory_all_orders', JSON.stringify(allOrders));
+            renderOrders();
         }
         
         async function loadAllStats() {
@@ -179,16 +187,8 @@
                 allProducts = Array.isArray(data) ? data : (data.goods || []);
                 document.getElementById('totalProducts').textContent = allProducts.length.toLocaleString();
                 
-                allOrders = [];
-                users.forEach(user => {
-                    const userOrders = JSON.parse(localStorage.getItem(`territory_orders_${user.email}`) || '[]');
-                    allOrders = allOrders.concat(userOrders);
-                });
-                const currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
-                if (currentUser) {
-                    const currentOrders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.email}`) || '[]');
-                    allOrders = allOrders.concat(currentOrders);
-                }
+                // Завантажуємо замовлення із загального сховища
+                allOrders = JSON.parse(localStorage.getItem('territory_all_orders') || '[]');
                 allOrders.sort((a,b) => new Date(b.date) - new Date(a.date));
                 
                 const totalRevenue = allOrders.reduce((sum, o) => sum + parseFloat(o.total), 0);
@@ -258,6 +258,11 @@
                     <div class="order-header">
                         <span class="order-date">📅 ${new Date(order.date).toLocaleString()}</span>
                         <span class="order-total">💰 ${order.total} ₴</span>
+                        <select onchange="updateOrderStatus(${order.id}, this.value)" class="order-status ${order.status || 'new'}">
+                            <option value="new" ${(order.status || 'new') === 'new' ? 'selected' : ''}>🆕 Нове</option>
+                            <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>⚙️ В обробці</option>
+                            <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✅ Виконано</option>
+                        </select>
                     </div>
                     <div class="order-items">
                         ${order.items.map(item => `
@@ -266,6 +271,9 @@
                                 <span>${item.qty} шт × ${item.price.toFixed(2)} ₴ = ${(item.price * item.qty).toFixed(2)} ₴</span>
                             </div>
                         `).join('')}
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #94a3b8;">
+                        👤 ${order.customer || 'Гість'} | 📞 ${order.phone || '—'} | 📧 ${order.email || '—'}
                     </div>
                 </div>
             `).join('');
@@ -290,10 +298,10 @@
         
         function exportOrders() {
             if (allOrders.length === 0) { alert('Немає замовлень'); return; }
-            let csv = "ID,Дата,Клієнт,Телефон,Місто,Сума,Товари\n";
+            let csv = "ID,Дата,Клієнт,Телефон,Email,Сума,Статус,Товари\n";
             allOrders.forEach(o => { 
                 const items = o.items.map(i => `${i.name} x${i.qty}`).join('; ');
-                csv += `${o.id},${o.date},${o.customer || 'Гість'},${o.phone || ''},${o.city || ''},${o.total},"${items}"\n`; 
+                csv += `${o.id},${o.date},${o.customer || 'Гість'},${o.phone || ''},${o.email || ''},${o.total},${o.status || 'new'},"${items}"\n`; 
             });
             downloadCSV(csv, `orders_${new Date().toISOString().slice(0,19)}.csv`);
         }
@@ -317,6 +325,10 @@
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+        }
+        
+        if (localStorage.getItem('admin_logged_in') === 'true') {
+            loadAllStats();
         }
     </script>
 </body>
