@@ -63,11 +63,18 @@
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); }
         if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
         
-        function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
+        function showToast(msg) { 
+            let t = document.createElement('div'); 
+            t.className = 'toast'; 
+            t.innerHTML = msg; 
+            document.body.appendChild(t); 
+            setTimeout(() => t.remove(), 2000); 
+        }
         
         const urlParams = new URLSearchParams(window.location.search);
         const productCode = urlParams.get('code');
         
+        // Функції для роботи з кількістю
         function updateQuantityDisplay() {
             const input = document.getElementById('quantityInput');
             if (input) input.value = currentQuantity;
@@ -94,6 +101,7 @@
             updateQuantityDisplay();
         }
         
+        // Функція додавання в кошик
         function addToCart() {
             if (!currentProductData) {
                 showToast('❌ Помилка: товар не знайдено');
@@ -102,7 +110,7 @@
             
             const code = currentProductData.code;
             const price = currentProductData.price || currentProductData.sprice || 0;
-            const name = (currentProductData.gname || currentProductData.name || currentProductData.code || 'Без назви').substring(0, 40);
+            const name = (currentProductData.gname || currentProductData.name || currentProductData.code || 'Без назви').substring(0, 50);
             
             let cart = JSON.parse(localStorage.getItem('territory_cart') || '{}');
             
@@ -114,6 +122,22 @@
             
             localStorage.setItem('territory_cart', JSON.stringify(cart));
             showToast(`✅ Додано ${currentQuantity} шт. на суму ${(price * currentQuantity).toFixed(2)} ₴`);
+            
+            // Оновлюємо кількість на складі
+            if (currentQuantity >= maxStock) {
+                maxStock = 0;
+                document.querySelector('.stock').innerHTML = '📦 Немає в наявності';
+                document.querySelector('.stock').className = 'stock out-stock';
+                const buyBtn = document.querySelector('.buy-btn');
+                if (buyBtn) buyBtn.disabled = true;
+                const quantitySelector = document.querySelector('.quantity-selector');
+                if (quantitySelector) quantitySelector.style.display = 'none';
+            } else {
+                maxStock -= currentQuantity;
+                const stockSpan = document.querySelector('.stock');
+                if (stockSpan) stockSpan.innerHTML = `📦 ${maxStock} шт`;
+                updateQuantityDisplay();
+            }
         }
         
         async function loadProduct() {
@@ -161,21 +185,21 @@
                                 <h1>${productName.substring(0, 150)}</h1>
                                 <div class="code">📋 Код: ${product.code}</div>
                                 <div class="price">${price.toFixed(2)} ₴${isPromo ? `<span class="old-price">${oldPrice.toFixed(2)} ₴</span>` : ''}</div>
-                                <div class="stock ${stockClass}">📦 ${stockText}</div>
+                                <div class="stock ${stockClass}" id="stockDisplay">📦 ${stockText}</div>
                                 
                                 ${stockNum > 0 ? `
-                                <div class="quantity-selector">
+                                <div class="quantity-selector" id="quantitySelector">
                                     <label>Кількість:</label>
                                     <div class="quantity-control">
-                                        <button class="quantity-btn minus" onclick="changeQuantity(-1)">−</button>
-                                        <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="${stockNum}" onchange="setQuantity(this.value)">
-                                        <button class="quantity-btn plus" onclick="changeQuantity(1)">+</button>
+                                        <button class="quantity-btn minus" id="minusBtn">−</button>
+                                        <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="${stockNum}">
+                                        <button class="quantity-btn plus" id="plusBtn">+</button>
                                     </div>
                                     <span style="color:#666; font-size:14px;">Доступно: ${stockNum} шт</span>
                                 </div>
                                 ` : ''}
                                 
-                                <button class="buy-btn" onclick="addToCart()" ${stockNum === 0 ? 'disabled' : ''}>🛒 Купити</button>
+                                <button class="buy-btn" id="buyBtn" ${stockNum === 0 ? 'disabled' : ''}>🛒 Купити</button>
                             </div>
                         </div>
                         
@@ -196,6 +220,17 @@
                     </div>
                 `;
                 
+                // Прив'язуємо події після створення DOM
+                const minusBtn = document.getElementById('minusBtn');
+                const plusBtn = document.getElementById('plusBtn');
+                const quantityInput = document.getElementById('quantityInput');
+                const buyBtn = document.getElementById('buyBtn');
+                
+                if (minusBtn) minusBtn.onclick = () => changeQuantity(-1);
+                if (plusBtn) plusBtn.onclick = () => changeQuantity(1);
+                if (quantityInput) quantityInput.onchange = (e) => setQuantity(e.target.value);
+                if (buyBtn) buyBtn.onclick = () => addToCart();
+                
                 updateQuantityDisplay();
                 
             } catch(e) {
@@ -203,11 +238,6 @@
                 document.getElementById('productContent').innerHTML = `<div class="error">❌ Помилка: ${e.message}</div>`;
             }
         }
-        
-        // Робимо функції глобальними
-        window.addToCart = addToCart;
-        window.changeQuantity = changeQuantity;
-        window.setQuantity = setQuantity;
         
         loadProduct();
     </script>
