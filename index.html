@@ -19,7 +19,6 @@
         .cart-count { background: #ff6b6b; border-radius: 20px; padding: 2px 8px; margin-left: 5px; }
         .contacts { display: flex; gap: 15px; font-size: 13px; }
         .profile-info { background: rgba(255,255,255,0.2); border-radius: 40px; padding: 5px 15px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
-        .profile-img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
         
         .filters { background: white; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .search-box { flex: 2; min-width: 200px; position: relative; }
@@ -51,18 +50,19 @@
         .pagination button:disabled { opacity: 0.5; }
         
         .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
-        .cart-content { background: white; border-radius: 20px; max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 25px; position: relative; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #ddd; gap: 10px; }
-        .cart-item-info { flex: 2; }
-        .cart-item-title { font-weight: 600; margin-bottom: 5px; word-break: break-word; }
-        .cart-item-price { color: #48bb78; font-size: 14px; }
-        .cart-item-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .cart-item-actions button { width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .cart-content { background: white; border-radius: 20px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 25px; position: relative; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #ddd; gap: 15px; flex-wrap: wrap; }
+        .cart-item-info { flex: 2; min-width: 180px; }
+        .cart-item-title { font-weight: 600; margin-bottom: 5px; word-break: break-word; font-size: 14px; }
+        .cart-item-price { color: #48bb78; font-size: 14px; font-weight: 600; }
+        .cart-item-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .cart-item-actions button { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; font-weight: bold; }
         .btn-minus { background: #fc8181; color: white; }
         .btn-plus { background: #48bb78; color: white; }
-        .btn-remove { background: #666; color: white; width: auto !important; border-radius: 20px !important; padding: 0 12px; }
+        .btn-remove { background: #666; color: white; width: auto !important; border-radius: 20px !important; padding: 0 15px; }
+        .cart-item-qty { min-width: 30px; text-align: center; font-weight: 600; }
         .cart-total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: right; font-size: 20px; font-weight: bold; }
-        .cart-buttons { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .cart-buttons { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
         .cart-buttons button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; min-width: 140px; }
         .btn-checkout { background: #48bb78; color: white; }
         .btn-clear { background: #fc8181; color: white; }
@@ -75,10 +75,7 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .loading { text-align: center; padding: 50px; color: #666; }
         .to-top { position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px; background: #667eea; color: white; border: none; border-radius: 50%; cursor: pointer; display: none; z-index: 1000; }
-        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } .cart-item { flex-direction: column; align-items: flex-start; } }
-        
-        .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: white; color: #333; border: 1px solid #ddd; }
-        .google-btn img { width: 20px; }
+        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } .cart-item { flex-direction: column; align-items: stretch; } .cart-item-actions { justify-content: flex-end; } }
     </style>
 </head>
 <body>
@@ -211,11 +208,11 @@
                     <div class="cart-item">
                         <div class="cart-item-info">
                             <div class="cart-item-title">${item.name}</div>
-                            <div class="cart-item-price">${item.price.toFixed(2)} ₴</div>
+                            <div class="cart-item-price">${item.price.toFixed(2)} ₴ / шт</div>
                         </div>
                         <div class="cart-item-actions">
                             <button class="btn-minus" onclick="updateQuantity('${code}', -1)">−</button>
-                            <span style="min-width:30px; text-align:center">${item.qty}</span>
+                            <span class="cart-item-qty">${item.qty}</span>
                             <button class="btn-plus" onclick="updateQuantity('${code}', 1)">+</button>
                             <button class="btn-remove" onclick="removeFromCart('${code}')">Видалити</button>
                         </div>
@@ -235,6 +232,7 @@
                     cart[code].qty = newQty;
                 }
                 saveCart();
+                if (Object.keys(cart).length === 0) closeCart();
             }
         }
         
@@ -242,6 +240,7 @@
             delete cart[code];
             saveCart();
             showToast('🗑 Товар видалено');
+            if (Object.keys(cart).length === 0) closeCart();
         }
         
         function clearCart() {
@@ -249,6 +248,7 @@
                 cart = {};
                 saveCart();
                 showToast('Кошик очищено');
+                closeCart();
             }
         }
         
@@ -268,7 +268,7 @@
             }
             
             let total = Object.values(cart).reduce((s,i) => s + i.price * i.qty, 0);
-            let itemsList = Object.values(cart).map(i => `${i.name.substring(0, 40)} x${i.qty} = ${(i.price * i.qty).toFixed(2)} ₴`).join('\n');
+            let itemsList = Object.values(cart).map(i => `${i.name} x${i.qty} = ${(i.price * i.qty).toFixed(2)} ₴`).join('\n');
             
             if (confirm(`Ваше замовлення:\n\n${itemsList}\n\n💰 Загалом: ${total.toFixed(2)} ₴\n\nОформити замовлення?`)) {
                 if (currentUser) {
@@ -336,7 +336,7 @@
         
         function addToCart(code, name, price) {
             if(cart[code]) cart[code].qty += 1;
-            else cart[code] = { name: name.substring(0, 60), price: parseFloat(price), qty: 1 };
+            else cart[code] = { name: name.substring(0, 100), price: parseFloat(price), qty: 1 };
             saveCart();
             showToast(`✅ Додано до кошика (${price.toFixed(2)} ₴)`);
         }
