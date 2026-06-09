@@ -10,12 +10,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f5f7fa; padding: 20px; transition: all 0.3s; }
         body.dark { background: #1a1a2e; color: #eee; }
-        body.dark .card, body.dark .filters, body.dark .stats-bar, body.dark .cart-content { background: #0f0f1a; color: #eee; border-color: #2a2a3e; }
+        body.dark .card, body.dark .filters, body.dark .stats-bar, body.dark .cart-content, body.dark .orders-content { background: #0f0f1a; color: #eee; border-color: #2a2a3e; }
         
         .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 25px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .logo h1 { font-size: 24px; cursor: pointer; }
         .logo p { font-size: 11px; opacity: 0.8; }
-        .cart-btn, .auth-btn, .theme-btn { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 40px; cursor: pointer; border: none; color: white; display: inline-flex; align-items: center; gap: 5px; }
+        .cart-btn, .auth-btn, .theme-btn, .orders-btn { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 40px; cursor: pointer; border: none; color: white; display: inline-flex; align-items: center; gap: 5px; }
         .cart-count { background: #ff6b6b; border-radius: 20px; padding: 2px 8px; margin-left: 5px; }
         .contacts { display: flex; gap: 15px; font-size: 13px; }
         .profile-info { background: rgba(255,255,255,0.2); border-radius: 40px; padding: 5px 15px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
@@ -49,8 +49,10 @@
         .pagination button { padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 30px; cursor: pointer; }
         .pagination button:disabled { opacity: 0.5; }
         
-        .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
-        .cart-content { background: white; border-radius: 20px; max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
+        /* Модальні вікна */
+        .cart-modal, .orders-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+        .cart-content, .orders-content { background: white; border-radius: 20px; max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
+        
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #ddd; gap: 15px; flex-wrap: wrap; }
         .cart-item-info { flex: 3; min-width: 200px; }
         .cart-item-title { font-weight: 600; margin-bottom: 5px; word-break: break-word; font-size: 14px; line-height: 1.4; }
@@ -61,13 +63,21 @@
         .btn-plus { background: #48bb78; color: white; }
         .btn-remove { background: #666; color: white; width: auto !important; border-radius: 20px !important; padding: 0 15px; }
         .cart-item-qty-input { width: 60px; height: 36px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; }
-        .cart-item-qty { min-width: 30px; text-align: center; font-weight: 600; font-size: 16px; }
         .cart-total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: right; font-size: 24px; font-weight: bold; }
         .cart-buttons { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
         .cart-buttons button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; min-width: 140px; }
         .btn-checkout { background: #48bb78; color: white; }
         .btn-clear { background: #fc8181; color: white; }
         .btn-close { background: #667eea; color: white; }
+        
+        /* Історія замовлень */
+        .orders-list { display: flex; flex-direction: column; gap: 20px; }
+        .order-card { border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .order-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .order-date { color: #666; font-size: 14px; }
+        .order-total { font-weight: bold; color: #48bb78; font-size: 18px; }
+        .order-items { margin-top: 10px; }
+        .order-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
         
         footer { text-align: center; padding: 20px; color: #999; margin-top: 30px; border-top: 1px solid #ddd; }
         .footer-contacts { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -76,14 +86,14 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .loading { text-align: center; padding: 50px; color: #666; }
         .to-top { position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px; background: #667eea; color: white; border: none; border-radius: 50%; cursor: pointer; display: none; z-index: 1000; }
-        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } .cart-item { flex-direction: column; align-items: stretch; } .cart-item-actions { justify-content: flex-end; } }
+        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } .cart-item { flex-direction: column; align-items: stretch; } }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo" onclick="location.reload()"><h1>🛒 Territory Comfort</h1><p>Актуальні ціни та наявність</p></div>
         <div class="contacts"><span>📞 +38 (073) 044-5800</span><span>📞 +38 (098) 044-5800</span></div>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <button class="theme-btn" onclick="toggleTheme()">🌙</button>
             <button class="cart-btn" onclick="openCart()">🛒 Кошик <span id="cartCount" class="cart-count">0</span></button>
             <div id="authContainer"></div>
@@ -116,6 +126,7 @@
     </footer>
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
+    <!-- Кошик -->
     <div id="cartModal" class="cart-modal">
         <div class="cart-content">
             <button onclick="closeCart()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
@@ -130,6 +141,15 @@
         </div>
     </div>
 
+    <!-- Історія замовлень -->
+    <div id="ordersModal" class="orders-modal">
+        <div class="orders-content">
+            <button onclick="closeOrdersModal()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
+            <h3><i class="fas fa-history"></i> Історія замовлень</h3>
+            <div id="ordersList"></div>
+        </div>
+    </div>
+
     <script>
         // Авторизація
         let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
@@ -140,6 +160,7 @@
                 container.innerHTML = `<div class="profile-info">
                     <i class="fas fa-user-circle"></i>
                     <span>${currentUser.fullName || currentUser.email.split('@')[0]}</span>
+                    <button class="orders-btn" onclick="openOrdersModal()"><i class="fas fa-history"></i> Історія</button>
                     <button class="auth-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Вихід</button>
                 </div>`;
             } else {
@@ -176,7 +197,43 @@
         
         function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
         
-        // Кошик - БЕЗ ОБМЕЖЕНЬ
+        // Історія замовлень
+        function openOrdersModal() {
+            if (!currentUser) {
+                showToast('🔐 Увійдіть в акаунт');
+                return;
+            }
+            const orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.uid}`) || '[]');
+            const container = document.getElementById('ordersList');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<div style="padding:30px;text-align:center">📭 У вас поки що немає замовлень</div>';
+            } else {
+                container.innerHTML = `<div class="orders-list">${orders.map(order => `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <span class="order-date">📅 ${new Date(order.date).toLocaleString()}</span>
+                            <span class="order-total">💰 ${order.total} ₴</span>
+                        </div>
+                        <div class="order-items">
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <span>${item.name}</span>
+                                    <span>${item.qty} шт × ${item.price.toFixed(2)} ₴ = ${(item.price * item.qty).toFixed(2)} ₴</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}</div>`;
+            }
+            document.getElementById('ordersModal').style.display = 'flex';
+        }
+        
+        function closeOrdersModal() {
+            document.getElementById('ordersModal').style.display = 'none';
+        }
+        
+        // Кошик
         let cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser?.uid || 'guest'}`) || '{}');
         
         function updateCartUI() { 
