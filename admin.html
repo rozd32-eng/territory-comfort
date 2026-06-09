@@ -39,7 +39,6 @@
         .order-items { margin-top: 10px; }
         .order-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; flex-wrap: wrap; gap: 10px; }
         
-        /* Стилі для форми входу */
         .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; }
         .login-box { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; }
         .login-box h2 { margin-bottom: 20px; color: #38bdf8; }
@@ -51,6 +50,16 @@
     </style>
 </head>
 <body>
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <h2><i class="fas fa-lock"></i> Вхід в адмін-панель</h2>
+            <input type="text" id="adminLogin" placeholder="Логін" autocomplete="off">
+            <input type="password" id="adminPassword" placeholder="Пароль">
+            <button onclick="checkAdminLogin()">Увійти</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+    </div>
+
     <div id="adminContent" style="display: none;">
         <div class="container">
             <div class="header">
@@ -111,16 +120,6 @@
         </div>
     </div>
 
-    <div id="loginContainer" class="login-container">
-        <div class="login-box">
-            <h2><i class="fas fa-lock"></i> Вхід в адмін-панель</h2>
-            <input type="text" id="adminLogin" placeholder="Логін" autocomplete="off">
-            <input type="password" id="adminPassword" placeholder="Пароль">
-            <button onclick="checkAdminLogin()">Увійти</button>
-            <div id="loginError" class="error-msg"></div>
-        </div>
-    </div>
-
     <script>
         // Дані для входу (змініть на свої)
         const ADMIN_LOGIN = 'admin';
@@ -145,6 +144,8 @@
             localStorage.removeItem('admin_logged_in');
             document.getElementById('adminContent').style.display = 'none';
             document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('adminLogin').value = '';
+            document.getElementById('adminPassword').value = '';
         }
         
         // Перевірка при завантаженні сторінки
@@ -316,10 +317,6 @@
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-        }
-        
-        if (localStorage.getItem('admin_logged_in') === 'true') {
-            loadAllStats();
         }
     </script>
 </body>
