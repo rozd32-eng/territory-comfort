@@ -50,18 +50,19 @@
         .pagination button:disabled { opacity: 0.5; }
         
         .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
-        .cart-content { background: white; border-radius: 20px; max-width: 750px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 25px; position: relative; }
+        .cart-content { background: white; border-radius: 20px; max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #ddd; gap: 15px; flex-wrap: wrap; }
-        .cart-item-info { flex: 2; min-width: 200px; }
+        .cart-item-info { flex: 3; min-width: 200px; }
         .cart-item-title { font-weight: 600; margin-bottom: 5px; word-break: break-word; font-size: 14px; line-height: 1.4; }
         .cart-item-price { color: #48bb78; font-size: 14px; font-weight: 600; }
         .cart-item-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .cart-item-actions button { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .cart-item-actions button { width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; font-weight: bold; }
         .btn-minus { background: #fc8181; color: white; }
         .btn-plus { background: #48bb78; color: white; }
         .btn-remove { background: #666; color: white; width: auto !important; border-radius: 20px !important; padding: 0 15px; }
+        .cart-item-qty-input { width: 60px; height: 36px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; }
         .cart-item-qty { min-width: 30px; text-align: center; font-weight: 600; font-size: 16px; }
-        .cart-total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: right; font-size: 20px; font-weight: bold; }
+        .cart-total { margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: right; font-size: 24px; font-weight: bold; }
         .cart-buttons { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
         .cart-buttons button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; min-width: 140px; }
         .btn-checkout { background: #48bb78; color: white; }
@@ -175,7 +176,7 @@
         
         function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
         
-        // Кошик
+        // Кошик - БЕЗ ОБМЕЖЕНЬ
         let cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser?.uid || 'guest'}`) || '{}');
         
         function updateCartUI() { 
@@ -212,7 +213,7 @@
                         </div>
                         <div class="cart-item-actions">
                             <button class="btn-minus" onclick="updateQuantity('${code}', -1)">−</button>
-                            <span class="cart-item-qty">${item.qty}</span>
+                            <input type="number" class="cart-item-qty-input" value="${item.qty}" min="1" max="999999" onchange="setQuantity('${code}', this.value)">
                             <button class="btn-plus" onclick="updateQuantity('${code}', 1)">+</button>
                             <button class="btn-remove" onclick="removeFromCart('${code}')">Видалити</button>
                         </div>
@@ -233,6 +234,15 @@
                 }
                 saveCart();
                 if (Object.keys(cart).length === 0) closeCart();
+            }
+        }
+        
+        function setQuantity(code, value) {
+            let newQty = parseInt(value);
+            if (isNaN(newQty) || newQty < 1) newQty = 1;
+            if (cart[code]) {
+                cart[code].qty = newQty;
+                saveCart();
             }
         }
         
@@ -336,7 +346,7 @@
         
         function addToCart(code, name, price) {
             if(cart[code]) cart[code].qty += 1;
-            else cart[code] = { name: name.substring(0, 120), price: parseFloat(price), qty: 1 };
+            else cart[code] = { name: name.substring(0, 150), price: parseFloat(price), qty: 1 };
             saveCart();
             showToast(`✅ Додано до кошика (${price.toFixed(2)} ₴)`);
         }
