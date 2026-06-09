@@ -7,59 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyAgEV-Hzt5RW54isNoTmEQPqyUY_ndbb84",
-            authDomain: "territory-comfort.firebaseapp.com",
-            projectId: "territory-comfort",
-            storageBucket: "territory-comfort.firebasestorage.app",
-            messagingSenderId: "935081538509",
-            appId: "1:935081538509:web:cd487e097352c98bd4ca84"
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-        
-        window.firebaseAuth = auth;
-        window.googleSignIn = () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-                    localStorage.setItem('territory_current_user', JSON.stringify({
-                        uid: user.uid,
-                        email: user.email,
-                        fullName: user.displayName,
-                        photoURL: user.photoURL
-                    }));
-                    location.reload();
-                })
-                .catch((error) => console.error('Google auth error:', error));
-        };
-        
-        window.logout = () => {
-            signOut(auth).then(() => {
-                localStorage.removeItem('territory_current_user');
-                location.reload();
-            });
-        };
-        
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                localStorage.setItem('territory_current_user', JSON.stringify({
-                    uid: user.uid,
-                    email: user.email,
-                    fullName: user.displayName,
-                    photoURL: user.photoURL
-                }));
-            }
-        });
-    </script>
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f5f7fa; padding: 20px; transition: all 0.3s; }
@@ -153,6 +100,62 @@
     </footer>
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgEV-Hzt5RW54isNoTmEQPqyUY_ndbb84",
+            authDomain: "territory-comfort.firebaseapp.com",
+            projectId: "territory-comfort",
+            storageBucket: "territory-comfort.firebasestorage.app",
+            messagingSenderId: "935081538509",
+            appId: "1:935081538509:web:cd487e097352c98bd4ca84"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        
+        // Робимо функції глобальними
+        window.googleSignIn = () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    localStorage.setItem('territory_current_user', JSON.stringify({
+                        uid: user.uid,
+                        email: user.email,
+                        fullName: user.displayName,
+                        photoURL: user.photoURL
+                    }));
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    console.error('Google auth error:', error);
+                    alert('Помилка входу: ' + error.message);
+                });
+        };
+        
+        window.logout = () => {
+            signOut(auth).then(() => {
+                localStorage.removeItem('territory_current_user');
+                window.location.reload();
+            });
+        };
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                localStorage.setItem('territory_current_user', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    fullName: user.displayName,
+                    photoURL: user.photoURL
+                }));
+            }
+        });
+    </script>
+
     <script>
         // Firebase auth state
         let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
@@ -178,7 +181,6 @@
             if (JSON.stringify(newUser) !== JSON.stringify(currentUser)) {
                 currentUser = newUser;
                 updateAuthUI();
-                // Оновлюємо кошик для нового користувача
                 cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser?.uid || 'guest'}`) || '{}');
                 updateCartUI();
             }
@@ -214,9 +216,11 @@
             });
             msg += `\n\n💰 Загалом: ${total.toFixed(2)} ₴\n\nНатисніть ОК для оформлення замовлення`;
             if(confirm(msg + '\n\nОформити замовлення?')) {
-                let orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.uid}`) || '[]');
-                orders.unshift({ id: Date.now(), date: new Date().toISOString(), items: Object.values(cart), total: total.toFixed(2) });
-                localStorage.setItem(`territory_orders_${currentUser.uid}`, JSON.stringify(orders));
+                if(currentUser) {
+                    let orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.uid}`) || '[]');
+                    orders.unshift({ id: Date.now(), date: new Date().toISOString(), items: Object.values(cart), total: total.toFixed(2) });
+                    localStorage.setItem(`territory_orders_${currentUser.uid}`, JSON.stringify(orders));
+                }
                 alert('✅ Замовлення прийнято! Найближчим часом з вами зв\'яжуться.');
                 cart = {};
                 saveCart();
