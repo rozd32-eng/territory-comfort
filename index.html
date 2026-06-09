@@ -6,6 +6,60 @@
     <title>Territory Comfort - Каталог товарів</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgEV-Hzt5RW54isNoTmEQPqyUY_ndbb84",
+            authDomain: "territory-comfort.firebaseapp.com",
+            projectId: "territory-comfort",
+            storageBucket: "territory-comfort.firebasestorage.app",
+            messagingSenderId: "935081538509",
+            appId: "1:935081538509:web:cd487e097352c98bd4ca84"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        
+        window.firebaseAuth = auth;
+        window.googleSignIn = () => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    localStorage.setItem('territory_current_user', JSON.stringify({
+                        uid: user.uid,
+                        email: user.email,
+                        fullName: user.displayName,
+                        photoURL: user.photoURL
+                    }));
+                    location.reload();
+                })
+                .catch((error) => console.error('Google auth error:', error));
+        };
+        
+        window.logout = () => {
+            signOut(auth).then(() => {
+                localStorage.removeItem('territory_current_user');
+                location.reload();
+            });
+        };
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                localStorage.setItem('territory_current_user', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    fullName: user.displayName,
+                    photoURL: user.photoURL
+                }));
+            }
+        });
+    </script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f5f7fa; padding: 20px; transition: all 0.3s; }
@@ -18,6 +72,9 @@
         .cart-btn, .auth-btn, .theme-btn { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 40px; cursor: pointer; border: none; color: white; }
         .cart-count { background: #ff6b6b; border-radius: 20px; padding: 2px 8px; margin-left: 5px; }
         .contacts { display: flex; gap: 15px; font-size: 13px; }
+        .profile-info { background: rgba(255,255,255,0.2); border-radius: 40px; padding: 5px 15px; font-size: 13px; display: flex; align-items: center; gap: 10px; }
+        .profile-img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+        
         .filters { background: white; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .search-box { flex: 2; min-width: 200px; position: relative; }
         .search-box input { width: 100%; padding: 10px 40px 10px 15px; border: 1px solid #ddd; border-radius: 40px; }
@@ -54,6 +111,9 @@
         .loading { text-align: center; padding: 50px; color: #666; }
         .to-top { position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px; background: #667eea; color: white; border: none; border-radius: 50%; cursor: pointer; display: none; z-index: 1000; }
         @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } }
+        
+        .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: white; color: #333; border: 1px solid #ddd; }
+        .google-btn img { width: 20px; }
     </style>
 </head>
 <body>
@@ -63,7 +123,7 @@
         <div style="display: flex; gap: 8px; align-items: center;">
             <button class="theme-btn" onclick="toggleTheme()">🌙</button>
             <button class="cart-btn" onclick="openCart()">🛒 Кошик <span id="cartCount" class="cart-count">0</span></button>
-            <button class="auth-btn" id="authBtn" onclick="alert('Авторизація в розробці')">👤 Увійти</button>
+            <div id="authContainer"></div>
         </div>
     </div>
 
@@ -94,19 +154,54 @@
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
     <script>
+        // Firebase auth state
+        let currentUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
+        
+        function updateAuthUI() {
+            const container = document.getElementById('authContainer');
+            if (currentUser) {
+                container.innerHTML = `<div class="profile-info">
+                    ${currentUser.photoURL ? `<img src="${currentUser.photoURL}" class="profile-img">` : '<i class="fas fa-user-circle"></i>'}
+                    <span>${currentUser.fullName || currentUser.email.split('@')[0]}</span>
+                    <button class="auth-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Вихід</button>
+                </div>`;
+            } else {
+                container.innerHTML = `<button class="auth-btn google-btn" onclick="googleSignIn()">
+                    <img src="https://www.google.com/favicon.ico"> Увійти через Google
+                </button>`;
+            }
+        }
+        
+        // Оновлюємо UI при зміні користувача
+        setInterval(() => {
+            const newUser = JSON.parse(localStorage.getItem('territory_current_user') || 'null');
+            if (JSON.stringify(newUser) !== JSON.stringify(currentUser)) {
+                currentUser = newUser;
+                updateAuthUI();
+                // Оновлюємо кошик для нового користувача
+                cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser?.uid || 'guest'}`) || '{}');
+                updateCartUI();
+            }
+        }, 500);
+        
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); }
         if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
         
         function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
         
-        let cart = JSON.parse(localStorage.getItem('territory_cart') || '{}');
+        let cart = JSON.parse(localStorage.getItem(`territory_cart_${currentUser?.uid || 'guest'}`) || '{}');
         function updateCartUI() { let c = Object.values(cart).reduce((s,i)=>s+(i.qty||0),0); document.getElementById('cartCount').textContent = c; }
+        function saveCart() { 
+            const uid = currentUser?.uid || 'guest';
+            localStorage.setItem(`territory_cart_${uid}`, JSON.stringify(cart));
+            updateCartUI();
+        }
         function addToCart(code, name, price) {
+            if(!currentUser) { showToast('🔐 Увійдіть в акаунт'); return; }
             if(cart[code]) cart[code].qty += 1;
             else cart[code] = { name: name.substring(0,40), price: parseFloat(price), qty: 1 };
-            localStorage.setItem('territory_cart', JSON.stringify(cart));
-            updateCartUI();
-            showToast(`✅ ${name.substring(0,30)} додано за ${price.toFixed(2)} ₴`);
+            saveCart();
+            showToast(`✅ Додано (${price.toFixed(2)} ₴)`);
         }
         function openCart() {
             let items = Object.entries(cart);
@@ -117,8 +212,16 @@
                 msg += `\n${item.name} - ${item.price} ₴ x ${item.qty} = ${(item.price*item.qty).toFixed(2)} ₴`;
                 total += item.price * item.qty;
             });
-            msg += `\n\n💰 Загалом: ${total.toFixed(2)} ₴`;
-            alert(msg);
+            msg += `\n\n💰 Загалом: ${total.toFixed(2)} ₴\n\nНатисніть ОК для оформлення замовлення`;
+            if(confirm(msg + '\n\nОформити замовлення?')) {
+                let orders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.uid}`) || '[]');
+                orders.unshift({ id: Date.now(), date: new Date().toISOString(), items: Object.values(cart), total: total.toFixed(2) });
+                localStorage.setItem(`territory_orders_${currentUser.uid}`, JSON.stringify(orders));
+                alert('✅ Замовлення прийнято! Найближчим часом з вами зв\'яжуться.');
+                cart = {};
+                saveCart();
+                updateCartUI();
+            }
         }
         
         updateCartUI();
@@ -187,7 +290,7 @@
                 let stockText = stock > 0 ? `${stock} шт` : 'Немає';
                 let imgUrl = (p.pic && p.pic !== 'null') ? p.pic : 'https://via.placeholder.com/200x200?text=📷';
                 let productName = p.gname || p.name || p.code || 'Без назви';
-                return `<div class="card">
+                return `<div class="card" onclick="location.href='product.html?code=${p.code}'">
                     <div class="card-img"><img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x200?text=📷'"></div>
                     <div class="card-info">
                         <div class="vendor">${p.vendor || ''}</div>
@@ -195,7 +298,7 @@
                         <div class="code">${p.code || ''}</div>
                         <div>${hasPromo ? `<span class="price-current">${promo.toFixed(2)}</span><span class="price-old">${price.toFixed(2)} ₴</span>` : `<span class="price-current">${price.toFixed(2)}</span>`}</div>
                         <div class="stock ${stockClass}">${stockText}</div>
-                        <button class="add-btn" onclick="addToCart('${p.code}','${productName.replace(/'/g,"\\'")}',${price})" ${stock===0?'disabled':''}>🛒 В кошик</button>
+                        <button class="add-btn" onclick="event.stopPropagation(); addToCart('${p.code}','${productName.replace(/'/g,"\\'")}',${price})" ${stock===0?'disabled':''}>🛒 В кошик</button>
                     </div>
                 </div>`;
             }).join('');
@@ -245,6 +348,7 @@
         window.onscroll = function() { document.getElementById('toTopBtn').style.display = window.scrollY > 300 ? 'block' : 'none'; };
         document.getElementById('toTopBtn').onclick = () => window.scrollTo({top:0, behavior:'smooth'});
         
+        updateAuthUI();
         loadProducts();
     </script>
 </body>
