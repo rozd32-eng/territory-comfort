@@ -18,7 +18,7 @@
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
         .product-img img { width: 100%; max-height: 400px; object-fit: contain; }
         .vendor { color: #667eea; font-size: 14px; margin-bottom: 10px; }
-        h1 { font-size: 24px; margin-bottom: 10px; }
+        h1 { font-size: 24px; margin-bottom: 10px; line-height: 1.3; }
         .code { color: #999; font-size: 12px; margin-bottom: 15px; }
         .price { font-size: 32px; font-weight: 700; color: #48bb78; margin: 15px 0; }
         .old-price { font-size: 18px; color: #999; text-decoration: line-through; margin-left: 10px; }
@@ -26,8 +26,19 @@
         .in-stock { background: #48bb78; color: white; }
         .low-stock { background: #ed8936; color: white; }
         .out-stock { background: #fc8181; color: white; }
+        
+        /* Вибір кількості */
+        .quantity-selector { display: flex; align-items: center; gap: 15px; margin: 20px 0; }
+        .quantity-selector label { font-weight: 600; }
+        .quantity-control { display: flex; align-items: center; gap: 10px; }
+        .quantity-btn { width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; font-size: 20px; font-weight: bold; }
+        .quantity-btn.minus { background: #fc8181; color: white; }
+        .quantity-btn.plus { background: #48bb78; color: white; }
+        .quantity-input { width: 60px; height: 40px; text-align: center; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; }
+        
         .buy-btn { padding: 15px 30px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; width: 100%; }
         .buy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
         .specs { background: #f7fafc; border-radius: 16px; padding: 20px; margin-top: 20px; }
         .specs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 15px; }
         .loading { text-align: center; padding: 50px; }
@@ -44,18 +55,56 @@
     <button class="theme-btn" onclick="toggleTheme()">🌙</button>
 
     <script>
+        let currentQuantity = 1;
+        let currentProduct = null;
+        let maxStock = 0;
+        
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark')?'dark':'light'); }
         if(localStorage.getItem('theme')==='dark') document.body.classList.add('dark');
         
         const urlParams = new URLSearchParams(window.location.search);
         const productCode = urlParams.get('code');
         
-        function addToCart(code, name, price) {
+        function updateQuantityDisplay() {
+            const input = document.getElementById('quantityInput');
+            if (input) input.value = currentQuantity;
+            const minusBtn = document.querySelector('.quantity-btn.minus');
+            if (minusBtn) minusBtn.disabled = currentQuantity <= 1;
+            const plusBtn = document.querySelector('.quantity-btn.plus');
+            if (plusBtn) plusBtn.disabled = currentQuantity >= maxStock;
+        }
+        
+        function changeQuantity(delta) {
+            const newQty = currentQuantity + delta;
+            if (newQty >= 1 && newQty <= maxStock) {
+                currentQuantity = newQty;
+                updateQuantityDisplay();
+            }
+        }
+        
+        function setQuantity(value) {
+            let qty = parseInt(value);
+            if (isNaN(qty)) qty = 1;
+            if (qty < 1) qty = 1;
+            if (qty > maxStock) qty = maxStock;
+            currentQuantity = qty;
+            updateQuantityDisplay();
+        }
+        
+        function addToCart() {
+            if (!currentProduct) return;
             let cart = JSON.parse(localStorage.getItem('territory_cart') || '{}');
-            if (cart[code]) cart[code].qty += 1;
-            else cart[code] = { name: name.substring(0, 40), price: parseFloat(price), qty: 1 };
+            const code = currentProduct.code;
+            const price = currentProduct.price || currentProduct.sprice || 0;
+            const name = (currentProduct.gname || currentProduct.name || currentProduct.code || 'Без назви').substring(0, 40);
+            
+            if (cart[code]) {
+                cart[code].qty += currentQuantity;
+            } else {
+                cart[code] = { name: name, price: parseFloat(price), qty: currentQuantity };
+            }
             localStorage.setItem('territory_cart', JSON.stringify(cart));
-            alert('✅ Товар додано до кошика!');
+            alert(`✅ Додано ${currentQuantity} шт. ${name.substring(0, 30)} за ${(price * currentQuantity).toFixed(2)} ₴`);
         }
         
         async function loadProduct() {
@@ -76,11 +125,15 @@
                     return;
                 }
                 
+                currentProduct = product;
+                
                 let stockNum = 0;
                 if (product.whs && Array.isArray(product.whs)) {
                     const warehouse = product.whs.find(w => w.id === 1);
                     if (warehouse) stockNum = parseInt(String(warehouse.q).replace(/[^0-9]/g, '')) || 0;
                 }
+                maxStock = stockNum;
+                currentQuantity = 1;
                 
                 const stockClass = stockNum > 5 ? 'in-stock' : (stockNum > 0 ? 'low-stock' : 'out-stock');
                 const stockText = stockNum > 0 ? `${stockNum} шт` : 'Немає в наявності';
@@ -100,7 +153,20 @@
                                 <div class="code">📋 Код: ${product.code}</div>
                                 <div class="price">${price.toFixed(2)} ₴${isPromo ? `<span class="old-price">${oldPrice.toFixed(2)} ₴</span>` : ''}</div>
                                 <div class="stock ${stockClass}">📦 ${stockText}</div>
-                                <button class="buy-btn" onclick="addToCart('${product.code}', '${productName.replace(/'/g, "\\'")}', ${price})" ${stockNum === 0 ? 'disabled' : ''}>🛒 Купити</button>
+                                
+                                ${stockNum > 0 ? `
+                                <div class="quantity-selector">
+                                    <label>Кількість:</label>
+                                    <div class="quantity-control">
+                                        <button class="quantity-btn minus" onclick="changeQuantity(-1)">−</button>
+                                        <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="${stockNum}" onchange="setQuantity(this.value)">
+                                        <button class="quantity-btn plus" onclick="changeQuantity(1)">+</button>
+                                    </div>
+                                    <span style="color:#666; font-size:14px;">Доступно: ${stockNum} шт</span>
+                                </div>
+                                ` : ''}
+                                
+                                <button class="buy-btn" onclick="addToCart()" ${stockNum === 0 ? 'disabled' : ''}>🛒 Купити</button>
                             </div>
                         </div>
                         
@@ -120,6 +186,9 @@
                         </div>
                     </div>
                 `;
+                
+                updateQuantityDisplay();
+                
             } catch(e) {
                 console.error('Помилка:', e);
                 document.getElementById('productContent').innerHTML = `<div class="error">❌ Помилка: ${e.message}</div>`;
