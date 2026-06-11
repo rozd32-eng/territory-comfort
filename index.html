@@ -36,7 +36,6 @@
         .hero h1 { font-size: 36px; margin-bottom: 15px; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .hero p { font-size: 18px; color: #666; margin-bottom: 20px; }
         .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 20px; }
-        .hero-stat { text-align: center; }
         .hero-stat .number { font-size: 28px; font-weight: 700; color: #667eea; }
         .hero-stat .label { font-size: 14px; color: #888; }
         
@@ -58,10 +57,10 @@
         .card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
         .card-img { height: 180px; display: flex; align-items: center; justify-content: center; padding: 15px; background: #f7fafc; }
         .card-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .promo-badge { position: absolute; top: 10px; left: 10px; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; z-index: 2; }
+        .promo-badge { position: absolute; top: 10px; left: 10px; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 4px 12px; border-radius: 20px; font-size: 10px; }
         .card-info { padding: 15px; }
         .vendor { color: #667eea; font-size: 12px; margin-bottom: 5px; }
-        .title { font-size: 14px; font-weight: 600; margin-bottom: 8px; min-height: 40px; line-height: 1.3; }
+        .title { font-size: 14px; font-weight: 600; margin-bottom: 8px; min-height: 40px; }
         .code { font-size: 11px; color: #999; margin-bottom: 8px; }
         .price-current { font-size: 20px; font-weight: 700; color: #48bb78; }
         .price-current:after { content: ' ₴'; }
@@ -80,9 +79,9 @@
         .cart-content, .orders-content { background: white; border-radius: 20px; max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #ddd; gap: 15px; flex-wrap: wrap; }
         .cart-item-info { flex: 3; min-width: 200px; }
-        .cart-item-title { font-weight: 600; margin-bottom: 5px; word-break: break-word; font-size: 14px; }
+        .cart-item-title { font-weight: 600; margin-bottom: 5px; }
         .cart-item-price { color: #48bb78; font-size: 14px; font-weight: 600; }
-        .cart-item-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .cart-item-actions { display: flex; align-items: center; gap: 12px; }
         .cart-item-actions button { width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; font-weight: bold; }
         .btn-minus { background: #fc8181; color: white; }
         .btn-plus { background: #48bb78; color: white; }
@@ -95,7 +94,7 @@
         .btn-clear { background: #fc8181; color: white; }
         .btn-close { background: #667eea; color: white; }
         
-        .skeleton-card { background: white; border-radius: 16px; overflow: hidden; padding: 15px; }
+        .skeleton-card { background: white; border-radius: 16px; padding: 15px; }
         .skeleton-img { height: 180px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; margin-bottom: 15px; }
         .skeleton-line { height: 12px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 6px; margin-bottom: 10px; }
         .skeleton-line.short { width: 60%; }
@@ -108,14 +107,14 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .loading { text-align: center; padding: 50px; color: #666; }
         .to-top { position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px; background: #667eea; color: white; border: none; border-radius: 50%; cursor: pointer; display: none; z-index: 1000; }
-        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } .hero h1 { font-size: 24px; } .advantages { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } .filters { flex-direction: column; } .contacts { display: none; } .hero h1 { font-size: 24px; } }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo" onclick="location.reload()"><h1>🛒 Territory Comfort</h1><p>Інструменти та техніка</p></div>
         <div class="contacts"><span>📞 +38 (073) 044-5800</span><span>📞 +38 (098) 044-5800</span></div>
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; align-items: center;">
             <button class="theme-btn" onclick="toggleTheme()">🌙</button>
             <button class="cart-btn" onclick="openCart()">🛒 Кошик <span id="cartCount" class="cart-count">0</span></button>
             <div id="authContainer"></div>
@@ -159,20 +158,19 @@
 
     <div class="stats-bar"><div id="statsText">📊 Завантаження...</div></div>
 
-    <!-- Skeleton loading -->
     <div id="skeletonGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
     </div>
     
     <div class="products-grid" id="productsGrid" style="display: none;"></div>
@@ -188,11 +186,25 @@
     <button class="to-top" id="toTopBtn"><i class="fas fa-arrow-up"></i></button>
 
     <div id="cartModal" class="cart-modal">
-        <div class="cart-content"><button onclick="closeCart()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button><h3>🛒 Ваш кошик</h3><div id="cartItems"></div><div id="cartTotal" class="cart-total"></div><div class="cart-buttons"><button class="btn-clear" onclick="clearCart()">Очистити кошик</button><button class="btn-checkout" onclick="checkout()">Оформити замовлення</button><button class="btn-close" onclick="closeCart()">Продовжити покупки</button></div></div>
+        <div class="cart-content">
+            <button onclick="closeCart()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
+            <h3>🛒 Ваш кошик</h3>
+            <div id="cartItems"></div>
+            <div id="cartTotal" class="cart-total"></div>
+            <div class="cart-buttons">
+                <button class="btn-clear" onclick="clearCart()">Очистити кошик</button>
+                <button class="btn-checkout" onclick="checkout()">Оформити замовлення</button>
+                <button class="btn-close" onclick="closeCart()">Продовжити покупки</button>
+            </div>
+        </div>
     </div>
 
     <div id="ordersModal" class="orders-modal">
-        <div class="orders-content"><button onclick="closeOrdersModal()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button><h3><i class="fas fa-history"></i> Історія замовлень</h3><div id="ordersList"></div></div>
+        <div class="orders-content">
+            <button onclick="closeOrdersModal()" style="float:right;font-size:24px;background:none;border:none;cursor:pointer">&times;</button>
+            <h3><i class="fas fa-history"></i> Історія замовлень</h3>
+            <div id="ordersList"></div>
+        </div>
     </div>
 
     <script>
@@ -291,7 +303,7 @@
                 let customer = 'Гість', phone = '', email = '';
                 if (currentUser) { customer = currentUser.fullName || currentUser.email.split('@')[0]; email = currentUser.email; }
                 else { customer = prompt('Ваше ім\'я:', 'Гість') || 'Гість'; phone = prompt('Телефон:', '+380') || '+380'; email = prompt('Email:', '') || ''; }
-                const order = { id: Date.now(), date: new Date().toISOString(), items: Object.values(cart), total: total.toFixed(2), customer: customer, phone: phone, email: email, status: 'new' };
+                const order = { id: Date.now(), date: new Date().toISOString(), items: Object.values(cart), total: total.toFixed(2), customer, phone, email, status: 'new' };
                 let allOrders = JSON.parse(localStorage.getItem('territory_all_orders') || '[]');
                 allOrders.unshift(order); if (allOrders.length > 500) allOrders.pop(); localStorage.setItem('territory_all_orders', JSON.stringify(allOrders));
                 if (currentUser) { let userOrders = JSON.parse(localStorage.getItem(`territory_orders_${currentUser.email}`) || '[]'); userOrders.unshift(order); if (userOrders.length > 100) userOrders.pop(); localStorage.setItem(`territory_orders_${currentUser.email}`, JSON.stringify(userOrders)); }
@@ -330,4 +342,10 @@
             
             currentPage = 1;
             renderProducts();
-            document.getElementById('statsText').innerHTML = `
+            document.getElementById('statsText').innerHTML = `📊 ${filtered.length} товарів знайдено`;
+            if(search && search.length > 2) gtag('event', 'search', { event_category: 'search', event_label: search });
+        }
+        
+        function trackProductView(code) { views[code] = (views[code] || 0) + 1; localStorage.setItem('territory_views', JSON.stringify(views)); }
+        
+        function addToCart(code, name, price) { if(cart[code]) cart[code].qty += 1; else cart[code] = { name: name.substring(
