@@ -352,10 +352,4 @@
         function renderProducts() {
             let start = (currentPage-1) * itemsPerPage;
             let pageItems = filtered.slice(start, start + itemsPerPage);
-            let grid = document.getElementById('productsGrid');
-            let skeleton = document.getElementById('skeletonGrid');
-            
-            skeleton.style.display = 'none';
-            grid.style.display = 'grid';
-            
-            if(filtered.length === 0) { grid.innerHTML =
+            let grid = document.getElementById('productsGrid
