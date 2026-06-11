@@ -81,7 +81,7 @@
         .cart-item-info { flex: 3; min-width: 200px; }
         .cart-item-title { font-weight: 600; margin-bottom: 5px; }
         .cart-item-price { color: #48bb78; font-size: 14px; font-weight: 600; }
-        .cart-item-actions { display: flex; align-items: center; gap: 12px; }
+        .cart-item-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .cart-item-actions button { width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; font-weight: bold; }
         .btn-minus { background: #fc8181; color: white; }
         .btn-plus { background: #48bb78; color: white; }
@@ -97,7 +97,6 @@
         .skeleton-card { background: white; border-radius: 16px; padding: 15px; }
         .skeleton-img { height: 180px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; margin-bottom: 15px; }
         .skeleton-line { height: 12px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 6px; margin-bottom: 10px; }
-        .skeleton-line.short { width: 60%; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         
         footer { text-align: center; padding: 20px; color: #999; margin-top: 30px; border-top: 1px solid #ddd; }
@@ -159,18 +158,18 @@
     <div class="stats-bar"><div id="statsText">📊 Завантаження...</div></div>
 
     <div id="skeletonGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
-        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div></div>
     </div>
     
     <div class="products-grid" id="productsGrid" style="display: none;"></div>
@@ -348,4 +347,15 @@
         
         function trackProductView(code) { views[code] = (views[code] || 0) + 1; localStorage.setItem('territory_views', JSON.stringify(views)); }
         
-        function addToCart(code, name, price) { if(cart[code]) cart[code].qty += 1; else cart[code] = { name: name.substring(
+        function addToCart(code, name, price) { if(cart[code]) cart[code].qty += 1; else cart[code] = { name: name.substring(0, 100), price: parseFloat(price), qty: 1 }; saveCart(); showToast(`✅ Додано (${price.toFixed(2)} ₴)`); gtag('event', 'add_to_cart', { event_category: 'ecommerce' }); }
+        
+        function renderProducts() {
+            let start = (currentPage-1) * itemsPerPage;
+            let pageItems = filtered.slice(start, start + itemsPerPage);
+            let grid = document.getElementById('productsGrid');
+            let skeleton = document.getElementById('skeletonGrid');
+            
+            skeleton.style.display = 'none';
+            grid.style.display = 'grid';
+            
+            if(filtered.length === 0) { grid.innerHTML =
