@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Territory Comfort - Інтернет-магазин інструментів та техніки</title>
     <meta name="description" content="Понад 26 000 товарів: інструменти, будівельна та садова техніка. Доставка по Україні. Офіційна гарантія. ☎ +38 (073) 044-5800">
-    <meta name="keywords" content="інструменти, будівельна техніка, садова техніка, Stanley, Bosch, електроінструменти">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2XLV0L5BWE"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -96,7 +95,6 @@
         .btn-clear { background: #fc8181; color: white; }
         .btn-close { background: #667eea; color: white; }
         
-        .skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .skeleton-card { background: white; border-radius: 16px; overflow: hidden; padding: 15px; }
         .skeleton-img { height: 180px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 12px; margin-bottom: 15px; }
         .skeleton-line { height: 12px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 6px; margin-bottom: 10px; }
@@ -161,7 +159,22 @@
 
     <div class="stats-bar"><div id="statsText">📊 Завантаження...</div></div>
 
-    <div class="skeleton-grid" id="skeletonGrid"></div>
+    <!-- Skeleton loading -->
+    <div id="skeletonGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line"></div></div>
+    </div>
+    
     <div class="products-grid" id="productsGrid" style="display: none;"></div>
     <div class="pagination" id="pagination" style="display: none;"><button id="prevPage" disabled>◀ Назад</button><span id="pageInfo">Сторінка 1</span><button id="nextPage">Вперед ▶</button></div>
 
@@ -317,32 +330,4 @@
             
             currentPage = 1;
             renderProducts();
-            document.getElementById('statsText').innerHTML = `📊 ${filtered.length} товарів знайдено`;
-            if(search && search.length > 2) gtag('event', 'search', { event_category: 'search', event_label: search });
-        }
-        
-        function trackProductView(code) { views[code] = (views[code] || 0) + 1; localStorage.setItem('territory_views', JSON.stringify(views)); }
-        
-        function addToCart(code, name, price) { if(cart[code]) cart[code].qty += 1; else cart[code] = { name: name.substring(0, 150), price: parseFloat(price), qty: 1 }; saveCart(); showToast(`✅ Додано (${price.toFixed(2)} ₴)`); gtag('event', 'add_to_cart', { event_category: 'ecommerce' }); }
-        
-        function renderProducts() {
-            let start = (currentPage-1) * itemsPerPage;
-            let pageItems = filtered.slice(start, start + itemsPerPage);
-            let grid = document.getElementById('productsGrid');
-            let skeleton = document.getElementById('skeletonGrid');
-            
-            skeleton.style.display = 'none';
-            grid.style.display = 'grid';
-            
-            if(filtered.length === 0) { grid.innerHTML = '<div class="loading">😕 Товари не знайдено</div>'; document.getElementById('pagination').style.display = 'none'; return; }
-            
-            grid.innerHTML = pageItems.map(p => { 
-                let stock = getStock(p);
-                let price = p.price || p.sprice || 0;
-                let promo = p.promoRIC;
-                let oldPrice = p.RRP_UAH || 0;
-                let hasPromo = promo && promo < price;
-                let stockClass = stock > 5 ? 'stock-high' : (stock > 0 ? 'stock-low' : 'stock-out');
-                let stockText = stock > 0 ? `${stock} шт` : 'Немає';
-                let imgUrl = (p.pic && p.pic !== 'null') ? p.pic : 'https://via.placeholder.com/200x200?text=📷';
-                let productName = p.gname || p.name || p.code || 'Б
+            document.getElementById('statsText').innerHTML = `
